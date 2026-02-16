@@ -1,0 +1,37 @@
+{% extends "UniShare/base.html" %}
+
+{% block content %}
+   <h1>Liste de vos reservations</h1>
+
+    {% if erreur %}
+        <p>{{ erreur }}</p>
+    {% else %}
+        
+        <p>Nous avons {{ lesreservations|length }} réservations disponibles.</p>
+
+        {% if lesreservations|length == 0 %}
+            <p>Aucune réservation disponible pour le moment.</p>
+        {% else %}
+            <div>
+                {% for reservation in lesreservations %}
+                    <a href="{% url 'serviceDetail' reservation.service.id_service %}">
+                        <div style="border:1px solid #ccc; padding:12px; margin:10px 0; border-radius:8px;">
+                            <h3>
+                                
+                                    {{ reservation.service.titre }}
+                                
+                            </h3>
+
+                            <p><strong>Type :</strong> {{ reservation.service.type_service }}</p>
+                            <p>{{ reservation.service.description|truncatechars:120 }}</p>
+
+                            <p style="font-size: 0.9em;">
+                                Réservé par : {{ reservation.utilisateur.nom }} {{ reservation.utilisateur.prenom }}
+                            </p>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}

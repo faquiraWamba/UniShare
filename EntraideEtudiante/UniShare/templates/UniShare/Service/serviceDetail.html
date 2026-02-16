@@ -1,0 +1,39 @@
+{% extends "UniShare/base.html" %}
+
+{% block content %}
+    <h2>{{ service.titre }}</h2>
+    <p><strong>Catégorie de service :</strong> {{ service.type_service }}</p>
+    <p><strong>Visibilité :</strong> {{ service.visibilite }}</p>
+
+    {% if service.photo %}
+        <img src="{{ service.photo.url }}" alt="photo" width="250">
+    {% endif %}
+
+    <p>{{ service.description }}</p>
+    <p><strong>Publié par :</strong> {{ service.utilisateur.nom }} {{ service.utilisateur.prenom }}</p>
+    <p><strong>Date de publication :</strong> {{ service.date_publication|date:"d M Y H:i" }}</p>
+    <p><strong>Date d'expiration :</strong> {{ service.date_expiration|date:"d M Y" }}</p>
+    <p><strong>Date de rencontre :</strong> {{ service.date_rencontre|date:"d M Y H:i" }}</p>
+    <p><strong>Lieu de rencontre :</strong> {{ service.lieu_rencontre }}</p>
+    {% if service.auteur.id == user.id %}
+        
+        <p>Nombre de réservations : {{ service.reservations.count }}</p>
+        <li>
+
+        <a href="{% url 'modifierService' service.id_service %}">Modifier</a>
+        | <a href="{% url 'supprimerService' service.id_service %}">Supprimer</a>
+        {%if service.reservations.count > 0 %}
+            | <a href="{% url 'reservationsService' service.id_service %}">Voir la liste des réservations</a>
+        {% endif %}
+        
+        </li>
+        <p><strong>Statut :</strong> {{ service.statut }}</p>
+    {% endif %}
+    
+    {% if service.auteur.id == user.id %}
+        <a href="{% url 'mesServices' %}">Retour</a>
+    {% else %}
+        <a href="{% url 'listeServices' %}">Retour</a>
+    {% endif %}
+
+{% endblock %}

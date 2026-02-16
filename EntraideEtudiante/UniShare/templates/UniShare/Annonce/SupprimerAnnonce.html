@@ -1,0 +1,13 @@
+{% extends "UniShare/base.html" %}
+{% block content %}
+<h1>Supprimer annonce</h1>
+
+<p>Voulez-vous supprimer : <strong>{{ annonce.titre }}</strong> ?</p>
+
+<form method="post">
+  {% csrf_token %}
+  <input type="submit" value="Oui, supprimer">
+</form>
+
+<a href="{% url 'mesAnnonces' %}">Annuler</a>
+{% endblock %}

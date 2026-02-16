@@ -1,0 +1,28 @@
+{% extends "UniShare/base.html" %}
+{% block content %}
+{% with service=reservation.service %}
+    <h1>Détails du service : {{ service.titre }}</h1>
+
+    <p><strong>Type :</strong> {{ service.type_service }}</p>
+    <p><strong>Description :</strong> {{ service.description }}</p>
+    <p><strong>Auteur :</strong> {{ service.auteur.nom }} {{ service.auteur.prenom }}</p>
+    <p><strong>Date de publication :</strong> {{ service.date_publication|date:"d M Y H:i" }}</p>
+    <p><strong>Date d'expiration :</strong> {{ service.date_expiration|date:"d M Y" }}</p>
+    <p><strong>Date de rencontre :</strong> {{ service.date_rencontre|date:"d M Y H:i" }}</p>
+    <p><strong>Lieu de rencontre :</strong> {{ service.lieu_rencontre }}</p>        
+    
+    {% if service.photo %}
+        <img src="{{ service.photo.url }}" alt="photo" width="250">
+    {% endif %}
+
+    {% if service.auteur.id == user.id %}
+       
+    {% endif %}
+    
+    {% if service.auteur.id == user.id %}
+        <a href="{% url 'reservationsService' id=service.id %}">Retour</a>
+    {% else %}
+        <a href="{% url 'mesReservations' %}">Retour</a>
+    {% endif %}
+{% endwith %}
+{% endblock %}

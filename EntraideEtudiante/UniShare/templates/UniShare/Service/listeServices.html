@@ -1,0 +1,61 @@
+{% extends "UniShare/base.html" %}
+{% block content %}
+<div>
+    <a href="{% url 'listeServices' %}">Services</a> 
+    <a href="{% url 'listeAnnonces' %}">Annonces</a> 
+</div>
+<!-- Tri des services -->
+<div> 
+  <form method="get" action="{% url 'listeServices' %}">
+    <label for="tri">Trier par :</label>
+    <select name="tri" id="tri" onchange="this.form.submit()">
+      <option value="">-- Sélectionner --</option>
+      <option value="date_publication" {% if request.GET.tri == 'date_publication' %}selected{% endif %}>Date de publication</option>
+      <option value="date_expiration" {% if request.GET.tri == 'date_expiration' %}selected{% endif %}>Date d'expiration</option>
+      <option value="date_rencontre" {% if request.GET.tri == 'date_rencontre' %}selected{% endif %}>Date de rencontre</option>
+    </select>
+</div>
+<!-- Filtre des services -->
+<div>
+  <form method="get" action="{% url 'listeServices' %}">
+    <label for="filtre">Filtrer par type de service :</label>
+    <select name="filtre" id="filtre" onchange="this.form.submit()">
+      <option value="">-- Sélectionner --</option>
+      {% for type in types_services %}
+        <option value="{{ type }}" {% if request.GET.filtre == type %}selected{% endif %}>{{ type }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<!-- Affichage des services -->
+<h1>Liste des services</h1>
+
+<p>Nous avons {{ lesservices|length }} services.</p>
+
+{% if lesservices|length == 0 %}
+  <p>Aucun service disponible.</p>
+{% else %}
+  <div>
+    {% for service in lesservices %}
+      <div style="border:1px solid #ccc; padding:12px; margin:10px 0; border-radius:8px;">
+        <h3>
+          <a href="{% url 'serviceDetail' service.id_service %}">
+            {{ service.titre }}
+          </a>
+          <a href="{% url 'reserverService' service.id_service %}">Réserver</a>
+        </h3>
+
+        <p><strong>Type :</strong> {{ service.type_service }}</p>
+        <p>{{ service.description|truncatechars:120 }}</p>
+
+        {% if service.statut %}
+          <p><strong>Statut :</strong> {{ service.statut }}</p>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+
+{% endblock %}

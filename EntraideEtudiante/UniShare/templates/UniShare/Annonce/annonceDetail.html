@@ -1,0 +1,20 @@
+{% extends "UniShare/base.html" %}
+
+{% block content %}
+    <h2>{{ annonce.titre }}</h2>
+    <p><strong>Catégorie :</strong> {{ annonce.categorie }}</p>
+    <p><strong>Visibilité :</strong> {{ annonce.visibilite }}</p>
+
+    {% if annonce.photo %}
+        <img src="{{ annonce.photo.url }}" alt="photo" width="250">
+    {% endif %}
+
+    <p>{{ annonce.description }}</p>
+    
+    <li>
+
+      <a href="{% url 'modifierAnnonce' annonce.id_annonce %}">Modifier</a>
+      | <a href="{% url 'supprimerAnnonce' annonce.id_annonce %}">Supprimer</a>
+    </li>
+    <a href="{% url 'listeAnnonces' %}">Retour</a>
+{% endblock %}

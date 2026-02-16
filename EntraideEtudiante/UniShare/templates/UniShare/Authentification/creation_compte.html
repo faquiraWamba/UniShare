@@ -1,0 +1,39 @@
+{% extends 'UniShare/base.html' %}
+
+{% block content %}
+<h1>Créer un compte</h1>
+
+<form action="" method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <h3>Informations utilisateur</h3>
+    {{ user_form.as_p }}
+
+    <div id="etudiant_block" style="display:none;">
+        <h3>Informations étudiant</h3>
+        {{ etu_form.as_p }}
+    </div>
+
+    <input type="submit" value="Envoyer">
+</form>
+
+<script>
+    function toggleEtudiantForm() {
+        let roleSelect = document.getElementById("id_role");
+        let etudiantBlock = document.getElementById("etudiant_block");
+
+        if (roleSelect.value === "ETU" || roleSelect.value === "ANC"){
+            etudiantBlock.style.display = "block";
+        } else {
+            etudiantBlock.style.display = "none";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        let roleSelect = document.getElementById("id_role");
+        roleSelect.addEventListener("change", toggleEtudiantForm);
+        toggleEtudiantForm();
+    });
+</script>
+
+{% endblock %}

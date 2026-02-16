@@ -1,0 +1,25 @@
+{% extends "UniShare/base.html" %}
+{% block content %}
+
+<h1>Mes annonces</h1>
+
+<a href="{% url 'creerAnnonce' %}">Créer une nouvelle annonce</a>
+
+<p>Vous avez {{ lesannonces|length }} annonces.</p>
+
+{% if lesannonces|length == 0 %}
+  <p>Vous n’avez pas encore publié d’annonce.</p>
+{% else %}
+  <ul>
+    {% for annonce in lesannonces %}
+      <li>
+        <a href="{% url 'annonceDetail' annonce.id_annonce %}">
+          {{ annonce.titre }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+
+{% endblock %}

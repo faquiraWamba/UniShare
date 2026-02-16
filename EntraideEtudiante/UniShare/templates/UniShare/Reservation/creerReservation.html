@@ -1,0 +1,23 @@
+{% extends "UniShare/base.html" %}
+
+{% block content %}
+    
+    <div style="border:1px solid #ccc; padding:12px; margin:10px 0; border-radius:8px;">
+        <h2>Réserver le service : {{ service.titre }}</h2>
+
+        <p><strong>Type :</strong> {{ service.type_service }}</p>
+        <p>{{ service.description|truncatechars:120 }}</p>
+
+        {% if service.statut %}
+          <p><strong>Statut :</strong> {{ service.statut }}</p>
+        {% endif %}
+      </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="service_id" value="{{ service.id_service }}">
+        <button type="submit">Confirmer la réservation</button>
+    </form>
+
+    <a href="{% url 'serviceDetail' service.id_service %}">Retour au service</a>
+{% endblock %}

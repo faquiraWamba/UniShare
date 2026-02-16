@@ -1,0 +1,27 @@
+{% extends "UniShare/base.html" %}
+
+{% block content %}
+    <h1>Tableau de bord administrateur</h1>
+    <p>Bienvenue sur votre tableau de bord, {{ request.session.user_name }} !</p>
+
+    <div>
+        <h2>Statistiques clés</h2>
+        <ul>
+            <li><strong>Nombre total d'utilisateurs :</strong> {{ stats.total_utilisateurs }}</li>
+            <li><strong>Nombre total d'annonces :</strong> {{ stats.total_annonces }}</li>
+            <li><strong>Nombre total de services :</strong> {{ stats.total_services }}</li>
+            <li><strong>Nombre total de réservations :</strong> {{ stats.total_reservations }}</li>
+        </ul>
+    </div>
+
+    <div>
+        <h2>Actions rapides</h2>
+        <ul>
+            <li><a href="{% url 'listeUtilisateurs' %}">Gérer les utilisateurs</a></li>
+            <li><a href="{% url 'listeAnnonces' %}">Gérer les annonces</a></li>
+            <li><a href="{% url 'listeServices' %}">Gérer les services</a></li>
+            <li><a href="{% url 'listeReservations' %}">Gérer les réservations</a></li>
+        </ul>
+    </div>
+
+{% endblock %}

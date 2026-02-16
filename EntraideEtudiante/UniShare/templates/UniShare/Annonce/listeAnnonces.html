@@ -1,0 +1,48 @@
+{# templates/UniShare/Annonce/listeAnnonces.html #}
+{% extends "UniShare/base.html" %}
+
+{% block content %}
+        <div>
+            <a href="{% url 'listeServices' %}">Services</a> 
+            <a href="{% url 'listeAnnonces' %}">Annonces</a> 
+        </div>
+    <h1>Liste des annonces</h1>
+
+    {% if erreur %}
+        <p>{{ erreur }}</p>
+    {% else %}
+        
+        <p>Nous avons {{ lesannonces|length }} annonces disponibles.</p>
+
+        {% if lesannonces|length == 0 %}
+            <p>Aucune annonce disponible pour le moment.</p>
+        {% else %}
+            <div>
+                {% for annonce in lesannonces %}
+                    <a href="{% url 'annonceDetail' annonce.id_annonce %}">
+                        <div style="border:1px solid #ccc; padding:12px; margin:10px 0; border-radius:8px;">
+                            <h3>
+                                
+                                    {{ annonce.titre }}
+                                
+                               <!-- | <a href="{% url 'modifierAnnonce' annonce.id_annonce %}">Modifier</a>
+                                | <a href="{% url 'supprimerAnnonce' annonce.id_annonce %}">Supprimer</a>*/-->
+                            </h3>
+
+                            <p><strong>Catégorie :</strong> {{ annonce.categorie }}</p>
+                            <p><strong>Visibilité :</strong> {{ annonce.visibilite }}</p>
+                            <p>{{ annonce.description|truncatechars:120 }}</p>
+
+                            <p style="font-size: 0.9em;">
+                                Publiée par : {{ annonce.auteur.nom }} {{ annonce.auteur.prenom }}
+                            </p>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <a href="{% url 'accueil' %}">Retour</a>
+
+    {% endif %}
+{% endblock %}

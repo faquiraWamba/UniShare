@@ -1,0 +1,13 @@
+{% extends 'UniShare/base.html' %}
+
+{% block content %}
+<h1>Profil utilisateur</h1>
+<p><strong>Nom :</strong> {{ utilisateur.nom }}</p>
+<p><strong>Prénom :</strong> {{ utilisateur.prenom }}</p>
+<p><strong>Email :</strong> {{ utilisateur.email }}</p>
+<p><strong>Rôle :</strong> {{ utilisateur.get_role_display }}</p>
+{% if utilisateur.photo %}
+    <p><strong>Photo de profil :</strong></p>
+    <img src="{{ utilisateur.photo.url }}" alt="Photo de profil" style="max-width:200px; max-height:200px;">
+{% endif %}
+{% endblock %}

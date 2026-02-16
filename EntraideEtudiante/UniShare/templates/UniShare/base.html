@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Ma bibliothèque</title>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>Plateforme étudiante</h1>
+
+        <nav>
+            <a href="/">Accueil</a> |
+            {% if request.session.user_role == "ETU" %}
+                <a href="{% url 'listeServices' %}">Annonces & Services</a> 
+                <a href="{% url 'mesAnnonces' %}">Mes annonces & Services</a> 
+                <a href="{% url 'mesReservations' %}">Mes réservations</a>
+                <a href="{% url 'mesNotifications' %}">Notifications</a> |
+             {% endif %}
+            
+            {% if request.session.user_role == "ADMIN" %}
+                <a href="{% url 'dashboardAdmin' %}">Admin Dashboard</a> |
+                <a href="{% url 'listeUtilisateurs' %}">Gestion des utilisateurs</a>
+            {% endif %}
+            
+            {% if request.session.user_id %}
+              <span>Connecté : {{ request.session.user_email }}</span>
+              <a href="{% url 'deconnexion' %}">Déconnexion</a>
+            {% else %}
+              <a href="{% url 'connexion' %}">Connexion</a>
+              <a href="{% url 'creerCompte' %}">Creer un compte</a>
+            {% endif %}
+        </nav>
+
+        <hr>
+    </header>
+
+    <!-- Contenu des pages -->
+    {% block content %}
+    {% endblock %}
+
+</body>
+</html>

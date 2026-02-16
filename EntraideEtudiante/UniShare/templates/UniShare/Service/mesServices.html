@@ -1,0 +1,25 @@
+{% extends "UniShare/base.html" %}
+{% block content %}
+
+<h1>Mes services</h1>
+
+<a href="{% url 'creerService' %}">Créer un nouveau service</a>
+
+<p>Vous avez {{ lesservices|length }} services.</p>
+
+{% if lesservices|length == 0 %}
+  <p>Vous n’avez pas encore publié d’service.</p>
+{% else %}
+  <ul>
+    {% for service in lesservices %}
+      <li>
+        <a href="{% url 'serviceDetail' service.id_service %}">
+          {{ service.titre }}
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+
+{% endblock %}

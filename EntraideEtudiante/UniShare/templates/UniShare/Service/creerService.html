@@ -1,0 +1,16 @@
+{% extends "UniShare/base.html" %}
+
+{% block content %}
+<h1>Créer une service</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <input type="submit" value="Créer">
+</form>
+
+<a href="{% url 'mesServices' %}">Retour</a>
+
+{% endblock %}
