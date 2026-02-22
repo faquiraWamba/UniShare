@@ -1,39 +1,56 @@
 {% extends 'UniShare/base.html' %}
 
 {% block content %}
-<h1>Créer un compte</h1>
+<main class="form-container">
+    <div class="form-card">
+        <h1>Créer un compte</h1>
+        
+        <form action="" method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
 
-<form action="" method="post" enctype="multipart/form-data" novalidate>
-    {% csrf_token %}
+            <div class="form-section">
+                <h3><i class="fas fa-user"></i> Informations utilisateur</h3>
+                <div class="grid-fields">
+                    {{ user_form.as_p }}
+                </div>
+            </div>
 
-    <h3>Informations utilisateur</h3>
-    {{ user_form.as_p }}
+            <div id="etudiant_block" class="form-section" style="display:none;">
+                <hr>
+                <h3><i class="fas fa-graduation-cap"></i> Informations étudiant</h3>
+                <div class="grid-fields">
+                    {{ etu_form.as_p }}
+                </div>
+            </div>
 
-    <div id="etudiant_block" style="display:none;">
-        <h3>Informations étudiant</h3>
-        {{ etu_form.as_p }}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Créer mon compte</button>
+            </div>
+            
+            <div class="form-footer">
+                <p>Déjà un compte ? <a href="{% url 'connexion' %}">Connectez-vous ici</a></p>
+            </div>
+        </form>
     </div>
-
-    <input type="submit" value="Envoyer">
-</form>
+</main>
 
 <script>
+    // Ton script JS reste identique ici
     function toggleEtudiantForm() {
         let roleSelect = document.getElementById("id_role");
         let etudiantBlock = document.getElementById("etudiant_block");
-
-        if (roleSelect.value === "ETU" || roleSelect.value === "ANC"){
+        if (roleSelect && (roleSelect.value === "ETU" || roleSelect.value === "ANC")) {
             etudiantBlock.style.display = "block";
         } else {
             etudiantBlock.style.display = "none";
         }
     }
-
     document.addEventListener("DOMContentLoaded", function () {
         let roleSelect = document.getElementById("id_role");
-        roleSelect.addEventListener("change", toggleEtudiantForm);
-        toggleEtudiantForm();
+        if (roleSelect) {
+            roleSelect.addEventListener("change", toggleEtudiantForm);
+            toggleEtudiantForm();
+        }
     });
 </script>
-
 {% endblock %}

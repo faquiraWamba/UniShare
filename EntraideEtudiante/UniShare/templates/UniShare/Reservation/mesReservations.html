@@ -1,37 +1,64 @@
 {% extends "UniShare/base.html" %}
+{% load static %}
 
 {% block content %}
-   <h1>Liste de vos reservations</h1>
+<main class="dashboard-page">
+    <div class="page-header">
+        <div class="header-titles">
+            <h1><i class="fas fa-calendar-check"></i> Mes Réservations</h1>
+            <p class="subtitle">Suivez l'état de vos demandes de services</p>
+        </div>
+    </div>
 
     {% if erreur %}
-        <p>{{ erreur }}</p>
+        <div class="alert error"><i class="fas fa-exclamation-circle"></i> {{ erreur }}</div>
     {% else %}
-        
-        <p>Nous avons {{ lesreservations|length }} réservations disponibles.</p>
+        <section class="reservations-tracker">
+            <p class="count-intro">Vous avez <strong>{{ lesreservations|length }}</strong> réservation(s) en cours.</p>
 
-        {% if lesreservations|length == 0 %}
-            <p>Aucune réservation disponible pour le moment.</p>
-        {% else %}
-            <div>
-                {% for reservation in lesreservations %}
-                    <a href="{% url 'serviceDetail' reservation.service.id_service %}">
-                        <div style="border:1px solid #ccc; padding:12px; margin:10px 0; border-radius:8px;">
-                            <h3>
-                                
-                                    {{ reservation.service.titre }}
-                                
-                            </h3>
+            {% if lesreservations %}
+                <div class="tracker-list">
+                    {% for reservation in lesreservations %}
+                        <div class="tracker-card">
+                            <div class="tracker-img">
+                                {% if reservation.service.photo %}
+                                    <img src="{{ reservation.service.photo.url }}" alt="Service">
+                                {% else %}
+                                    <div class="mini-placeholder"><i class="fas fa-handshake"></i></div>
+                                {% endif %}
+                            </div>
 
-                            <p><strong>Type :</strong> {{ reservation.service.type_service }}</p>
-                            <p>{{ reservation.service.description|truncatechars:120 }}</p>
+                            <div class="tracker-info">
+                                <span class="service-type-tag">{{ reservation.service.get_type_service_display }}</span>
+                                <h3><a href="{% url 'serviceDetail' reservation.service.id_service %}">{{ reservation.service.titre }}</a></h3>
+                                <p class="service-owner">
+                                    Proposé par <strong>{{ reservation.service.auteur.prenom }} {{ reservation.service.auteur.nom }}</strong>
+                                </p>
+                            </div>
 
-                            <p style="font-size: 0.9em;">
-                                Réservé par : {{ reservation.utilisateur.nom }} {{ reservation.utilisateur.prenom }}
-                            </p>
+                            <div class="tracker-status">
+                                <span class="status-pill {{ reservation.statut|lower }}">
+                                    <i class="fas fa-circle"></i> {{ reservation.get_statut_display }}
+                                </span>
+                                <span class="res-date">Le {{ reservation.date_creation|date:"d/m/Y" }}</span>
+                            </div>
+
+                            <div class="tracker-action">
+                                <a href="{% url 'serviceDetail' reservation.service.id_service %}" class="btn-icon" title="Voir le détail">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </div>
                         </div>
-                    </a>
-                {% endfor %}
-            </div>
-        {% endif %}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-calendar-times"></i></div>
+                    <p>Vous n'avez effectué aucune réservation pour le moment.</p>
+                    <a href="{% url 'listeServices' %}" class="btn-nav primary">Parcourir les services</a>
+                </div>
+            {% endif %}
+        </section>
     {% endif %}
+</main>
 {% endblock %}

@@ -1,48 +1,118 @@
-{# templates/UniShare/Annonce/listeAnnonces.html #}
 {% extends "UniShare/base.html" %}
+{% load static %}
 
 {% block content %}
-        <div>
-            <a href="{% url 'listeServices' %}">Services</a> 
-            <a href="{% url 'listeAnnonces' %}">Annonces</a> 
+<main class="services-page">
+    <div class="page-header">
+        <div class="header-titles">
+            <h1><i class="fas fa-bullhorn"></i> Mur des Annonces</h1>
+            <p class="subtitle">{{ lesannonces|length }} opportunités et bons plans partagés</p>
         </div>
-    <h1>Liste des annonces</h1>
+        <div class="view-toggle">
+            <a href="{% url 'listeServices' %}" class="btn-toggle">Services</a> 
+            <a href="{% url 'listeAnnonces' %}" class="btn-toggle active">Annonces</a> 
+        </div>
+    </div>
+
+    <section class="filter-bar">
+        <form method="GET" class="filter-form">
+            <div class="filter-group">
+                <label for="categorie">Catégorie:</label>
+                <select name="categorie" id="categorie" class="filter-select">
+                    <option value="">Toutes les catégories</option>
+                    {% for value, label in categories_choices %}
+                        <option value="{{ value }}" {% if selected_categorie == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="visibilite">Visibilité:</label>
+                <select name="visibilite" id="visibilite" class="filter-select">
+                    <option value="">Toutes les visibilités</option>
+                    {% for value, label in visibilites_choices %}
+                        <option value="{{ value }}" {% if selected_visibilite == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="sort">Trier par:</label>
+                <select name="sort" id="sort" class="filter-select">
+                    <option value="-date_creation" {% if sort_by == '-date_creation' %}selected{% endif %}>Plus récent</option>
+                    <option value="date_creation" {% if sort_by == 'date_creation' %}selected{% endif %}>Plus ancien</option>
+                    <option value="-date_expiration" {% if sort_by == '-date_expiration' %}selected{% endif %}>Expire en dernier</option>
+                    <option value="date_expiration" {% if sort_by == 'date_expiration' %}selected{% endif %}>Expire en premier</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="afficher_expirees">
+                    <input type="checkbox" name="afficher_expirees" id="afficher_expirees" value="true" {% if afficher_expirees %}checked{% endif %}>
+                    Afficher les annonces expirées
+                </label>
+            </div>
+
+            <button type="submit" class="btn-filter">Appliquer les filtres</button>
+            <a href="{% url 'listeAnnonces' %}" class="btn-reset">Réinitialiser</a>
+        </form>
+        <div class="info-count">{{ lesannonces|length }} annonce(s) trouvée(s)</div>
+    </section>
 
     {% if erreur %}
-        <p>{{ erreur }}</p>
+        <div class="alert error">{{ erreur }}</div>
     {% else %}
-        
-        <p>Nous avons {{ lesannonces|length }} annonces disponibles.</p>
+        <div class="services-grid">
+            {% for annonce in lesannonces %}
+                <article class="service-card">
+                    <div class="card-image">
+                        {% if annonce.photo %}
+                            <img src="{{ annonce.photo.url }}" alt="{{ annonce.titre }}">
+                        {% else %}
+                            <div class="img-placeholder"><i class="fas fa-bullhorn"></i></div>
+                        {% endif %}
+                        <span class="type-badge category-{{ annonce.categorie|lower }}">
+                            {{ annonce.get_categorie_display }}
+                        </span>
+                    </div>
 
-        {% if lesannonces|length == 0 %}
-            <p>Aucune annonce disponible pour le moment.</p>
-        {% else %}
-            <div>
-                {% for annonce in lesannonces %}
-                    <a href="{% url 'annonceDetail' annonce.id_annonce %}">
-                        <div style="border:1px solid #ccc; padding:12px; margin:10px 0; border-radius:8px;">
-                            <h3>
-                                
-                                    {{ annonce.titre }}
-                                
-                               <!-- | <a href="{% url 'modifierAnnonce' annonce.id_annonce %}">Modifier</a>
-                                | <a href="{% url 'supprimerAnnonce' annonce.id_annonce %}">Supprimer</a>*/-->
-                            </h3>
-
-                            <p><strong>Catégorie :</strong> {{ annonce.categorie }}</p>
-                            <p><strong>Visibilité :</strong> {{ annonce.visibilite }}</p>
-                            <p>{{ annonce.description|truncatechars:120 }}</p>
-
-                            <p style="font-size: 0.9em;">
-                                Publiée par : {{ annonce.auteur.nom }} {{ annonce.auteur.prenom }}
-                            </p>
+                    <div class="card-body">
+                        <div class="author-info">
+                            <img src="https://i.pravatar.cc/30?u={{ annonce.auteur.id }}" alt="Avatar" class="mini-avatar">
+                            <span>{{ annonce.auteur.prenom }} · {{ annonce.auteur.ecole }}</span>
                         </div>
-                    </a>
-                {% endfor %}
-            </div>
-        {% endif %}
+                        
+                        <h2 class="card-title">
+                            <a href="{% url 'annonceDetail' annonce.id_annonce %}">{{ annonce.titre }}</a>
+                        </h2>
+                        
+                        <p class="card-desc">{{ annonce.description|truncatechars:100 }}</p>
 
-        <a href="{% url 'accueil' %}">Retour</a>
+                        <div class="card-meta">
+                            <span class="vis-indicator {{ annonce.visibilite|lower }}">
+                                <i class="fas fa-eye"></i> {{ annonce.get_visibilite_display }}
+                            </span>
+                            <span><i class="fas fa-clock"></i> {{ annonce.date_creation|date:"d M" }}</span>
+                        </div>
+                    </div>
 
+                    <div class="card-footer-single">
+                        <a href="{% url 'annonceDetail' annonce.id_annonce %}" class="btn-full-action">
+                            Voir l'annonce
+                        </a>
+                    </div>
+                </article>
+            {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-ghost"></i>
+                    <p>Aucune annonce n'est disponible pour le moment.</p>
+                </div>
+            {% endfor %}
+        </div>
     {% endif %}
+
+    <div class="bottom-actions">
+        <a href="{% url 'accueil' %}" class="link-back"><i class="fas fa-chevron-left"></i> Retour à l'accueil</a>
+    </div>
+</main>
 {% endblock %}

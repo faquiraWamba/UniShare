@@ -1,61 +1,94 @@
 {% extends "UniShare/base.html" %}
+{% load static %}
+
 {% block content %}
-<div>
-    <a href="{% url 'listeServices' %}">Services</a> 
-    <a href="{% url 'listeAnnonces' %}">Annonces</a> 
-</div>
-<!-- Tri des services -->
-<div> 
-  <form method="get" action="{% url 'listeServices' %}">
-    <label for="tri">Trier par :</label>
-    <select name="tri" id="tri" onchange="this.form.submit()">
-      <option value="">-- Sélectionner --</option>
-      <option value="date_publication" {% if request.GET.tri == 'date_publication' %}selected{% endif %}>Date de publication</option>
-      <option value="date_expiration" {% if request.GET.tri == 'date_expiration' %}selected{% endif %}>Date d'expiration</option>
-      <option value="date_rencontre" {% if request.GET.tri == 'date_rencontre' %}selected{% endif %}>Date de rencontre</option>
-    </select>
-</div>
-<!-- Filtre des services -->
-<div>
-  <form method="get" action="{% url 'listeServices' %}">
-    <label for="filtre">Filtrer par type de service :</label>
-    <select name="filtre" id="filtre" onchange="this.form.submit()">
-      <option value="">-- Sélectionner --</option>
-      {% for type in types_services %}
-        <option value="{{ type }}" {% if request.GET.filtre == type %}selected{% endif %}>{{ type }}</option>
-      {% endfor %}
-    </select>
-  </form>
-</div>
+<main class="services-page">
+    <div class="page-header">
+        <div class="header-titles">
+            <h1><i class="fas fa-hand-holding-heart"></i> Liste des Services</h1>
+            <p class="subtitle">Découvrez {{ lesservices|length }} opportunités d'entraide</p>
+        </div>
+        <div class="view-toggle">
+            <a href="{% url 'listeServices' %}" class="btn-toggle active">Services</a> 
+            <a href="{% url 'listeAnnonces' %}" class="btn-toggle">Annonces</a> 
+        </div>
+    </div>
 
-<!-- Affichage des services -->
-<h1>Liste des services</h1>
+    <section class="filter-bar">
+        <form method="get" action="{% url 'listeServices' %}" class="filter-form">
+            <div class="filter-group">
+                <label for="filtre"><i class="fas fa-filter"></i> Type :</label>
+                <select name="filtre" id="filtre" onchange="this.form.submit()">
+                    <option value="">Tous les types</option>
+                    {% for type in types_services %}
+                        <option value="{{ type }}" {% if request.GET.filtre == type %}selected{% endif %}>{{ type }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-<p>Nous avons {{ lesservices|length }} services.</p>
+            <div class="filter-group">
+                <label for="tri"><i class="fas fa-sort-amount-down"></i> Trier par :</label>
+                <select name="tri" id="tri" onchange="this.form.submit()">
+                    <option value="date_creation" {% if request.GET.tri == 'date_creation' %}selected{% endif %}>Plus récents</option>
+                    <option value="date_rencontre" {% if request.GET.tri == 'date_rencontre' %}selected{% endif %}>Date de rencontre</option>
+                </select>
+            </div>
+        </form>
+    </section>
 
-{% if lesservices|length == 0 %}
-  <p>Aucun service disponible.</p>
-{% else %}
-  <div>
-    {% for service in lesservices %}
-      <div style="border:1px solid #ccc; padding:12px; margin:10px 0; border-radius:8px;">
-        <h3>
-          <a href="{% url 'serviceDetail' service.id_service %}">
-            {{ service.titre }}
-          </a>
-          <a href="{% url 'reserverService' service.id_service %}">Réserver</a>
-        </h3>
+    {% if lesservices %}
+        <div class="services-grid">
+            {% for service in lesservices %}
+                <article class="service-card">
+                    <div class="card-image">
+                        {% if service.photo %}
+                            <img src="{{ service.photo.url }}" alt="{{ service.titre }}">
+                        {% else %}
+                            <div class="img-placeholder"><i class="fas fa-image"></i></div>
+                        {% endif %}
+                        <span class="type-badge">{{ service.get_type_service_display }}</span>
+                    </div>
 
-        <p><strong>Type :</strong> {{ service.type_service }}</p>
-        <p>{{ service.description|truncatechars:120 }}</p>
+                    <div class="card-body">
+                        <div class="author-info">
+                             {% if service.auteur.photo %}
+                                <img src="{{ service.auteur.photo.url }}" alt="Avatar" class="mini-avatar">
+                            {% else %}
+                                <i class="fas fa-user-circle mini-avatar-icon"></i>
+                            {% endif %}
+                            <span>{{ service.auteur.prenom }} ({{ service.auteur.ecole }})</span>
+                        </div>
+                        
+                        <h2 class="card-title">
+                            <a href="{% url 'serviceDetail' service.id_service %}">{{ service.titre }}</a>
+                        </h2>
+                        
+                        <p class="card-desc">{{ service.description|truncatechars:80 }}</p>
 
-        {% if service.statut %}
-          <p><strong>Statut :</strong> {{ service.statut }}</p>
-        {% endif %}
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
+                        <div class="card-meta">
+                            {% if service.lieu_rencontre %}
+                                <span><i class="fas fa-map-marker-alt"></i> {{ service.lieu_rencontre }}</span>
+                            {% endif %}
+                            <span><i class="fas fa-calendar-alt"></i> {{ service.date_creation|date:"d M" }}</span>
+                        </div>
+                    </div>
 
-
+                    <div class="card-footer">
+                        <a href="{% url 'serviceDetail' service.id_service %}" class="btn-outline">Détails</a>
+                        {% if request.session.user_id and service.id_service in reserved_ids %}
+                            <button class="btn-disabled" disabled>Déjà réservé</button>
+                        {% else %}
+                            <a href="{% url 'reserverService' service.id_service %}" class="btn-action">Réserver</a>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-search"></i>
+            <p>Aucun service ne correspond à votre recherche.</p>
+        </div>
+    {% endif %}
+</main>
 {% endblock %}

@@ -1,4 +1,52 @@
 {% extends 'UniShare/base.html' %}
 {% block content %}
-    <h1>Bienvenu sur UniShare</h1>
+{% load static %}
+<main class="container-home">
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1>L'entraide étudiante, simplifiée</h1>
+            <div class="hero-actions">
+                <a href="{% url 'connexion' %}" class="btn btn-primary">Trouver un service</a>
+                <a href="{% url 'connexion' %}" class="btn btn-secondary">Proposer mon aide</a>
+            </div>
+        </div>
+        <img src="{% static 'site/etudiants.png' %}" class="hero-img" alt="Étudiants">
+    </section>
+
+    <div class="dashboard-row">
+        <div class="dashboard-col">
+            <h3>Catégories</h3>
+            <div class="category-grid">
+                <a href="{% url 'connexion' %}" class="item-card"><i class="fas fa-book"></i><p>Livres</p></a>
+                <a href="{% url 'connexion' %}" class="item-card"><i class="fas fa-graduation-cap"></i><p>Tutorat</p></a>
+                <a href="{% url 'connexion' %}" class="item-card"><i class="fas fa-car"></i><p>Auto</p></a>
+                <a href="{% url 'connexion' %}" class="item-card"><i class="fas fa-gift"></i><p>Dons</p></a>
+            </div>
+        </div>
+
+        <div class="dashboard-col">
+            <h3>Annonces Récentes</h3>
+            <div class="ads-stack">
+                <div class="ad-mini">
+                    <div class="ad-top">
+                        <img src="https://i.pravatar.cc/25?u=1" class="avatar">
+                        <span class="user">Jean D. - Sorbonne</span>
+                        <span class="badge">Tutorat</span>
+                    </div>
+                    <p class="ad-title">Mathématiques L1 : Algèbre</p>
+                    <p class="ad-desc">Dispo le jeudi soir pour aider en algèbre linéaire et analyse...</p>
+                </div>
+                <div class="ad-mini">
+                    <div class="ad-top">
+                        <img src="https://i.pravatar.cc/25?u=2" class="avatar">
+                        <span class="user">Marie C. - INSA</span>
+                        <span class="badge">Transport</span>
+                    </div>
+                    <p class="ad-title">Covoiturage Lyon-Villeurbanne</p>
+                    <p class="ad-desc">Départ 7h43 tous les matins, retour vers 18h. 3 places dispos...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 {% endblock %}

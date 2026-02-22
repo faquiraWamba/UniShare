@@ -1,25 +1,96 @@
 {% extends "UniShare/base.html" %}
+{% load static %}
+
 {% block content %}
-
-<h1>Mes annonces</h1>
-
-<a href="{% url 'creerAnnonce' %}">Créer une nouvelle annonce</a>
-
-<p>Vous avez {{ lesannonces|length }} annonces.</p>
-
-{% if lesannonces|length == 0 %}
-  <p>Vous n’avez pas encore publié d’annonce.</p>
-{% else %}
-  <ul>
-    {% for annonce in lesannonces %}
-      <li>
-        <a href="{% url 'annonceDetail' annonce.id_annonce %}">
-          {{ annonce.titre }}
+<main class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h1><i class="fas fa-bullhorn"></i> Mes Publications</h1>
+            <p class="subtitle">Gérez vos partages et opportunités sur UniShare</p>
+        </div>
+        <a href="{% url 'creerAnnonce' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Créer une annonce
         </a>
-      </li>
-    {% endfor %}
-  </ul>
-{% endif %}
+    </div>
 
+    <div class="tabs-container">
+        <div class="tabs">
+            <a href="{% url 'mesServices' %}" class="tab-link">
+                Mes Services <span class="count-badge">{{ lesservices_count }}</span>
+            </a>
+            <a href="{% url 'mesAnnonces' %}" class="tab-link active">
+                Mes Annonces <span class="count-badge">{{ lesannonces|length }}</span>
+            </a>
+        </div>
+    </div>
 
+    <section class="publications-list">
+        {% if lesannonces %}
+            <div class="table-container">
+                <table class="manage-table">
+                    <thead>
+                        <tr>
+                            <th>Annonce</th>
+                            <th>Catégorie</th>
+                            <th>Visibilité</th>
+                            <th>Expiration</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for annonce in lesannonces %}
+                        <tr>
+                            <td class="td-main">
+                                <div class="td-content">
+                                    {% if annonce.photo %}
+                                        <img src="{{ annonce.photo.url }}" class="mini-img">
+                                    {% else %}
+                                        <div class="mini-img-placeholder"><i class="fas fa-bullhorn"></i></div>
+                                    {% endif %}
+                                    <div>
+                                        <a href="{% url 'annonceDetail' annonce.id_annonce %}" class="title-link">{{ annonce.titre }}</a>
+                                        <span class="date-sub">Publié le {{ annonce.date_creation|date:"d/m/Y" }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="tag-light">
+                                    {{ annonce.get_categorie_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="vis-badge {{ annonce.visibilite|lower }}">
+                                    <i class="fas fa-eye"></i> {{ annonce.get_visibilite_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="date-expire {% if annonce.is_expired %}expired{% endif %}">
+                                    {{ annonce.date_expiration|date:"d/m/Y"|default:"Permanente" }}
+                                </span>
+                            </td>
+                            <td class="text-right actions-cell">
+                                <a href="{% url 'modifierAnnonce' annonce.id_annonce %}" class="btn-icon" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="post" action="{% url 'supprimerAnnonce' annonce.id_annonce %}" style="display:inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-icon delete confirm-action" data-confirm="Supprimer cette annonce ?" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-dashboard">
+                <i class="fas fa-comment-slash" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+                <p>Vous n'avez pas encore publié d'annonce.</p>
+                <a href="{% url 'creerAnnonce' %}" class="btn-nav primary" style="display: inline-block; margin-top: 1rem;">Publier ma première annonce</a>
+            </div>
+        {% endif %}
+    </section>
+</main>
 {% endblock %}

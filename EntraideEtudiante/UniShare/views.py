@@ -61,8 +61,11 @@ def connexion(request):
             if len(utilisateurs) != 0:
                 user = utilisateurs[0]
                 request.session['user_id'] = user.id
-                request.session['user_email'] = user.email
                 request.session['user_role'] = getattr(user, 'role', None)
+                request.session['user_photo'] = user.photo.url if user.photo else None
+                # stocker le prénom pour l'affichage rapide
+                request.session['user_prenom'] = getattr(user, 'prenom', '')
+                request.session['user_email'] = user.email
 
                 return HttpResponseRedirect(reverse("accueil")) 
             else:
@@ -79,6 +82,7 @@ def deconnexion(request):
     if 'user_id' in request.session:
         del request.session['user_id']
         del request.session['user_email']
+        del request.session['user_photo']
         if 'user_role' in request.session:
             del request.session['user_role']
     return HttpResponseRedirect(reverse("accueil"))
@@ -130,16 +134,63 @@ def listeAnnonces(request):
     if redirection:
         return redirection
 
-     # récupérer l'étudiant connecté
+    # récupérer l'étudiant connecté
     user_id = request.session['user_id']
     etudiant = Etudiant.objects.get(id=user_id)
 
     # annonces visibles par l'étudiant : uniquement celles des autres
-    annonces = Annonce.objects.exclude(auteur=etudiant)
+    # Exclure les annonces qui sont en fait des Services (héritage multi-table)
+    annonces = Annonce.objects.filter(service__isnull=True).exclude(auteur=etudiant)
+
+    # Appliquer les filtres de visibilité selon le profil de l'étudiant
+    from django.db.models import Q
+    visibilite_filter = Q(visibilite='PUBLIC') | \
+                       Q(visibilite='ECOLE', auteur__ecole=etudiant.ecole) | \
+                       Q(visibilite='PROMO', auteur__ecole=etudiant.ecole, auteur__promo=etudiant.promo)
+    annonces = annonces.filter(visibilite_filter)
+
+    # Récupérer les paramètres de filtrage et tri
+    categorie = request.GET.get('categorie', '')
+    visibilite = request.GET.get('visibilite', '')
+    afficher_expirees = request.GET.get('afficher_expirees', 'false').lower() == 'true'
+    sort_by = request.GET.get('sort', '-date_creation')  # Par défaut: plus récent en premier
+
+    # Filtrer par catégorie
+    if categorie and categorie != 'TOUS':
+        annonces = annonces.filter(categorie=categorie)
+
+    # Filtrer par visibilité
+    if visibilite and visibilite != 'TOUS':
+        annonces = annonces.filter(visibilite=visibilite)
+
+    # Filtrer par date d'expiration
+    if not afficher_expirees:
+        # Afficher seulement les annonces non expirées (sans date expiration ou date future)
+        annonces = annonces.filter(Q(date_expiration__isnull=True) | Q(date_expiration__gte=timezone.now()))
+
+    # Tri
+    if sort_by == '-date_creation':
+        annonces = annonces.order_by('-date_creation')
+    elif sort_by == 'date_creation':
+        annonces = annonces.order_by('date_creation')
+    elif sort_by == '-date_expiration':
+        annonces = annonces.order_by('-date_expiration')
+    elif sort_by == 'date_expiration':
+        annonces = annonces.order_by('date_expiration')
+
+    # Préparer les choix pour les selects
+    categories_choices = Annonce.Categorie.choices
+    visibilites_choices = Annonce.Visibilite.choices
 
     return render(request, "UniShare/Annonce/listeAnnonces.html", {
         "lesannonces": annonces,
-        "etudiant": etudiant
+        "etudiant": etudiant,
+        "categories_choices": categories_choices,
+        "visibilites_choices": visibilites_choices,
+        "selected_categorie": categorie,
+        "selected_visibilite": visibilite,
+        "afficher_expirees": afficher_expirees,
+        "sort_by": sort_by,
     })
 
 """ détail d'une annonce """
@@ -163,9 +214,7 @@ def mesAnnonces(request):
 
     user_id = request.session['user_id']
 
-    # si étudiant => auteur = Etudiant(id=user_id)
-    # si ancien/admin => tu peux aussi filtrer sur Utilisateur si ton FK auteur est Etudiant seulement
-    # Ici on suppose auteur = Etudiant (donc seuls étudiants publient des annonces).
+    # seuls étudiants publient des annonces).
     auteur = Etudiant.objects.get(id=user_id)
 
     annonces = Annonce.objects.filter(auteur=auteur)
@@ -208,12 +257,12 @@ def supprimerAnnonce(request, id):
 
     if annonce.auteur != etudiant:
         return HttpResponseRedirect(reverse("mesAnnonces"))
-
     if request.method == "POST":
         annonce.delete()
         return HttpResponseRedirect(reverse("mesAnnonces"))
 
-    return render(request, "UniShare/Annonce/supprimerAnnonce.html", {"annonce": annonce})
+    # si GET, rediriger vers la liste (les confirmations se gèrent inline)
+    return HttpResponseRedirect(reverse("mesAnnonces"))
 
 """
     Actions Services
@@ -269,9 +318,13 @@ def listeServices(request):
     # services visibles par l'étudiant : uniquement celles des autres
     services = Service.objects.exclude(auteur=etudiant)
 
+    # récupérer les ids des services déjà réservés par l'utilisateur courant
+    reserved_ids = list(Reservation.objects.filter(demandeur=etudiant).values_list('service__id_service', flat=True))
+
     return render(request, "UniShare/Service/listeServices.html", {
         "lesservices": services,
-        "etudiant": etudiant
+        "etudiant": etudiant,
+        "reserved_ids": reserved_ids,
     })
 
 """ détail d'une service """
@@ -283,7 +336,14 @@ def serviceDetail(request, id):
     
     
     service = Service.objects.get(id_service=id)
-    return render(request, "UniShare/Service/serviceDetail.html", {"service": service})
+
+    # vérifier si l'utilisateur connecté a déjà une réservation pour ce service
+    user_id = request.session.get('user_id')
+    already_reserved = False
+    if user_id:
+        already_reserved = Reservation.objects.filter(service=service, demandeur__id=user_id).exists()
+
+    return render(request, "UniShare/Service/serviceDetail.html", {"service": service, "already_reserved": already_reserved})
 
 
 """ Liste des services de la personne connectée """
@@ -296,8 +356,7 @@ def mesServices(request):
     user_id = request.session['user_id']
 
     # si étudiant => auteur = Etudiant(id=user_id)
-    # si ancien/admin => tu peux aussi filtrer sur Utilisateur si ton FK auteur est Etudiant seulement
-    # Ici on suppose auteur = Etudiant (donc seuls étudiants publient des services).
+    # seuls étudiants publient des services).
     auteur = Etudiant.objects.get(id=user_id)
 
     services = Service.objects.filter(auteur=auteur)
@@ -340,12 +399,12 @@ def supprimerService(request, id):
 
     if service.auteur != etudiant:
         return HttpResponseRedirect(reverse("mesServices"))
-
     if request.method == "POST":
         service.delete()
         return HttpResponseRedirect(reverse("mesServices"))
 
-    return render(request, "UniShare/Service/supprimerService.html", {"service": service})
+    # si GET, rediriger vers la liste (les confirmations se gèrent inline)
+    return HttpResponseRedirect(reverse("mesServices"))
 
 """
     Actions Reservation
@@ -375,7 +434,7 @@ def reserverService(request, id):
             )
             reservation.save()
 
-        return HttpResponseRedirect(reverse("reservationDetail", args=[reservation.id_reservation]))
+        return HttpResponseRedirect(reverse("detailReservation", args=[reservation.id_reservation]))
 
     else:
         return render(request, "UniShare/Reservation/creerReservation.html", {"service": service})
@@ -433,7 +492,7 @@ def reservationsService(request, id):
     if 'user_id' not in request.session:
         return HttpResponseRedirect(reverse("connexion"))
 
-    service = Service.objects.get(id_service=id_service)
+    service = Service.objects.get(id_service=id)
     etudiant = Etudiant.objects.get(id=request.session['user_id'])
 
     if service.auteur != etudiant:
@@ -497,7 +556,7 @@ def refuserReservation(request, id_reservation):
 """Actions Admin"""
 """ Liste des utilisateurs (admin)"""
 def listeUtilisateurs(request):
-    if 'user_id' not in request.session or request.session.get('user_role') != "ADMIN":
+    if 'user_id' not in request.session or request.session.get('user_role') != "ADM":
         return HttpResponseRedirect(reverse("connexion"))
 
     utilisateurs = Utilisateur.objects.all()
@@ -508,7 +567,7 @@ def listeUtilisateurs(request):
 
 """ Supprimer un utilisateur (admin)"""
 def supprimerUtilisateur(request, id):
-    if 'user_id' not in request.session or request.session.get('user_role') != "ADMIN":
+    if 'user_id' not in request.session or request.session.get('user_role') != "ADM":
         return HttpResponseRedirect(reverse("connexion"))
 
     utilisateur = Utilisateur.objects.get(id=id)
@@ -521,7 +580,7 @@ def supprimerUtilisateur(request, id):
 
 """ Dashboard admin"""
 def dashboardAdmin(request):
-    if 'user_id' not in request.session or request.session.get('user_role') != "ADMIN":
+    if 'user_id' not in request.session or request.session.get('user_role') != "ADM":
         return HttpResponseRedirect(reverse("connexion"))
 
     nb_utilisateurs = Utilisateur.objects.count()
@@ -529,7 +588,7 @@ def dashboardAdmin(request):
     nb_annonces = Annonce.objects.count()
     nb_services = Service.objects.count()
 
-    return render(request, "UniShare/Admin/dashboardAdmin.html", {
+    return render(request, "UniShare/Administrateur/dashboardAdmin.html", {
         "nb_utilisateurs": nb_utilisateurs,
         "nb_etudiants": nb_etudiants,
         "nb_annonces": nb_annonces,

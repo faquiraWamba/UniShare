@@ -1,27 +1,63 @@
-<!--Listes des Notifications et détails à coté -->
 {% extends "UniShare/base.html" %}
+{% load static %}
 
 {% block content %}
-    <h2>Mes notifications</h2>
-    {% if lesnotifications|length == 0 %}
-        <p>Aucune notification pour le moment.</p>
-    {% else %}
-        <div>
-            {% for notification in lesnotifications %}
-                <a href="">
-                    <div style="border:1px solid #ccc; padding:12px; margin:10px 0; border-radius:8px;">
-                        <h3>
-                            {{ notification.titre }}
-                        </h3>
-
-                        <p>{{ notification.message|truncatechars:120 }}</p>
-
-                        <p style="font-size: 0.9em;">
-                            Reçue le : {{ notification.date_notification|date:"d M Y H:i" }}
-                        </p>
-                    </div>
-                </a>
-            {% endfor %}
+<main class="notifications-page">
+    <div class="page-header">
+        <div class="header-titles">
+            <h1><i class="fas fa-bell"></i> Centre de Notifications</h1>
+            <p class="subtitle">Restez informé de l'activité sur vos services et annonces</p>
         </div>
-    {% endif %}
+        {% if lesnotifications %}
+        <form action="{% url 'toutMarquerLu' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn-text-action">Tout marquer comme lu</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <div class="notifications-container">
+        {% if lesnotifications %}
+            <div class="notif-list">
+                {% for notification in lesnotifications %}
+                    <div class="notif-item {% if not notification.est_lue %}unread{% endif %}">
+                        <div class="notif-icon">
+                            {% if "acceptée" in notification.message|lower %}
+                                <i class="fas fa-check-circle color-success"></i>
+                            {% elif "réservation" in notification.message|lower %}
+                                <i class="fas fa-calendar-plus color-info"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle color-gray"></i>
+                            {% endif %}
+                        </div>
+
+                        <div class="notif-content">
+                            <div class="notif-header">
+                                <h3>{{ notification.titre }}</h3>
+                                <span class="notif-time">{{ notification.date_notification|date:"d M, H:i" }}</span>
+                            </div>
+                            <p class="notif-msg">{{ notification.message }}</p>
+                            
+                            {% if notification.lien %}
+                                <a href="{{ notification.lien }}" class="notif-action-link">Voir les détails</a>
+                            {% endif %}
+                        </div>
+
+                        {% if not notification.est_lue %}
+                            <div class="unread-dot"></div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-illustration">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <p>Vous n'avez aucune notification pour le moment.</p>
+                <a href="{% url 'accueil' %}" class="btn btn-primary-outline">Retour à l'accueil</a>
+            </div>
+        {% endif %}
+    </div>
+</main>
 {% endblock %}

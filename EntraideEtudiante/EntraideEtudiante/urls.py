@@ -61,9 +61,9 @@ urlpatterns = [
     #path("notifications/services/<int:id>/", views.notificationsService, name="notificationsService"),
 
     # Admin
-    path("admin/utilisateurs/", views.listeUtilisateurs, name="listeUtilisateurs"),
-    path("admin/supprimer-utilisateur/<int:id>/", views.supprimerUtilisateur, name="supprimerUtilisateur"),
-    path("admin/dashboard/", views.dashboardAdmin, name="dashboardAdmin"),
+    path("Theadmin/utilisateurs/", views.listeUtilisateurs, name="listeUtilisateurs"),
+    path("Theadmin/supprimer-utilisateur/<int:id>/", views.supprimerUtilisateur, name="supprimerUtilisateur"),
+    path("Theadmin/dashboard/", views.dashboardAdmin, name="dashboardAdmin"),
     
 ]
 

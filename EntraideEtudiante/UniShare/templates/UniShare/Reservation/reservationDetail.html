@@ -1,28 +1,90 @@
 {% extends "UniShare/base.html" %}
+{% load static %}
+
 {% block content %}
 {% with service=reservation.service %}
-    <h1>Détails du service : {{ service.titre }}</h1>
+<main class="detail-page">
+    <div class="container-detail">
+        <div class="detail-main">
+            <nav class="breadcrumb">
+                <a href="{% url 'mesReservations' %}">Réservations</a> / <span>Détail demande</span>
+            </nav>
 
-    <p><strong>Type :</strong> {{ service.type_service }}</p>
-    <p><strong>Description :</strong> {{ service.description }}</p>
-    <p><strong>Auteur :</strong> {{ service.auteur.nom }} {{ service.auteur.prenom }}</p>
-    <p><strong>Date de publication :</strong> {{ service.date_publication|date:"d M Y H:i" }}</p>
-    <p><strong>Date d'expiration :</strong> {{ service.date_expiration|date:"d M Y" }}</p>
-    <p><strong>Date de rencontre :</strong> {{ service.date_rencontre|date:"d M Y H:i" }}</p>
-    <p><strong>Lieu de rencontre :</strong> {{ service.lieu_rencontre }}</p>        
-    
-    {% if service.photo %}
-        <img src="{{ service.photo.url }}" alt="photo" width="250">
-    {% endif %}
+            <section class="reservation-header-card">
+                <div class="status-banner {{ reservation.statut|lower }}">
+                    <i class="fas fa-info-circle"></i> Statut actuel : <strong>{{ reservation.get_statut_display }}</strong>
+                </div>
 
-    {% if service.auteur.id == user.id %}
-       
-    {% endif %}
-    
-    {% if service.auteur.id == user.id %}
-        <a href="{% url 'reservationsService' id=service.id %}">Retour</a>
-    {% else %}
-        <a href="{% url 'mesReservations' %}">Retour</a>
-    {% endif %}
+                <div class="res-content-box">
+                    <span class="badge-type">{{ service.get_type_service_display }}</span>
+                    <h1>{{ service.titre }}</h1>
+                    
+                    <div class="service-mini-grid">
+                        <div class="s-item">
+                            <i class="fas fa-calendar-day"></i>
+                            <span>{{ service.date_rencontre|date:"d M Y à H:i" }}</span>
+                        </div>
+                        <div class="s-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ service.lieu_rencontre }}</span>
+                        </div>
+                    </div>
+
+                    <div class="res-description">
+                        <h4>Description du service</h4>
+                        <p>{{ service.description }}</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="detail-sidebar">
+            <div class="sidebar-card">
+                {% if request.session.user_id == service.auteur.id %}
+                    <h3>Le demandeur</h3>
+                    <div class="user-info-mini">
+                        <img src="https://i.pravatar.cc/50?u={{ reservation.demandeur.id }}" class="avatar-round">
+                        <div>
+                            <h4>{{ reservation.demandeur.prenom }} {{ reservation.demandeur.nom }}</h4>
+                            <p>{{ reservation.demandeur.ecole }}</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="action-zone">
+                        {% if reservation.statut == 'ATT' %}
+                            <form method="post" action="{% url 'modifierStatutReservation' reservation.id_reservation %}">
+                                {% csrf_token %}
+                                <button name="statut" value="ACC" class="btn btn-accept">Accepter la demande</button>
+                                <button name="statut" value="REF" class="btn btn-refuse">Refuser</button>
+                            </form>
+                        {% else %}
+                            <p class="info-note">Demande traitée le {{ reservation.date_traitement|date:"d/m/Y" }}</p>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <h3>L'hôte</h3>
+                    <div class="user-info-mini">
+                        <img src="https://i.pravatar.cc/50?u={{ service.auteur.id }}" class="avatar-round">
+                        <div>
+                            <h4>{{ service.auteur.prenom }} {{ service.auteur.nom }}</h4>
+                            <p>{{ service.auteur.ecole }}</p>
+                        </div>
+                    </div>
+                    <a href="mailto:{{ service.auteur.email }}" class="btn btn-outline-primary">Envoyer un message</a>
+                {% endif %}
+            </div>
+
+            {% if service.auteur.id == request.session.user_id %}
+                <a href="{% url 'reservationsService' service.id_service %}" class="link-back">
+                    <i class="fas fa-arrow-left"></i> Retour aux réservations
+                </a>
+            {% else %}
+                <a href="{% url 'mesReservations' %}" class="link-back">
+                    <i class="fas fa-arrow-left"></i> Mes demandes
+                </a>
+            {% endif %}
+        </aside>
+    </div>
+</main>
 {% endwith %}
 {% endblock %}

@@ -1,45 +1,91 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Ma bibliothèque</title>
+    <title>UniShare - Entraide Étudiante</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
-
-    <!-- Header -->
     <header>
-        <h1>Plateforme étudiante</h1>
+        <div class="logo-area">
+            <img src="{% static 'site/logo.png' %}" alt="Logo UniShare" class="logo-img">
+            <span class="logo-text">UniShare</span>
+        </div>
 
         <nav>
-            <a href="/">Accueil</a> |
-            {% if request.session.user_role == "ETU" %}
-                <a href="{% url 'listeServices' %}">Annonces & Services</a> 
-                <a href="{% url 'mesAnnonces' %}">Mes annonces & Services</a> 
-                <a href="{% url 'mesReservations' %}">Mes réservations</a>
-                <a href="{% url 'mesNotifications' %}">Notifications</a> |
-             {% endif %}
-            
-            {% if request.session.user_role == "ADMIN" %}
-                <a href="{% url 'dashboardAdmin' %}">Admin Dashboard</a> |
-                <a href="{% url 'listeUtilisateurs' %}">Gestion des utilisateurs</a>
+            <a href="/" class="nav-link">Accueil</a>
+            {% if request.session.user_role == "ETU" or request.session.user_role == "ANC" %}
+                <a href="{% url 'listeServices' %}" class="nav-link">Annonces & Services</a> 
+                <a href="{% url 'mesAnnonces' %}" class="nav-link">Mes Annonces</a> 
+                <a href="{% url 'mesReservations' %}" class="nav-link">Réservations</a>
             {% endif %}
             
-            {% if request.session.user_id %}
-              <span>Connecté : {{ request.session.user_email }}</span>
-              <a href="{% url 'deconnexion' %}">Déconnexion</a>
-            {% else %}
-              <a href="{% url 'connexion' %}">Connexion</a>
-              <a href="{% url 'creerCompte' %}">Creer un compte</a>
+            {% if request.session.user_role == "ADM" %}
+                <a href="{% url 'dashboardAdmin' %}" class="nav-link">Dashboard</a>
+                <a href="{% url 'listeUtilisateurs' %}" class="nav-link">Utilisateurs</a>
             {% endif %}
-        </nav>
 
-        <hr>
+            <div class="auth-buttons">
+                {% if request.session.user_id %}
+                    <a href="{% url 'mesNotifications' %}" class="notif-wrapper">
+                        <i class="fas fa-bell"></i>
+                         {% if nb_notif > 0 %}
+                            <span class="notif-badge">{{ nb_notif }}</span>
+                        {% endif %}
+                        {% if nb_notif > 0 %}
+                            <span class="notif-badge">{{ nb_notif }}</span>
+                        {% endif %}
+                    </a>
+
+                    <div class="user-profile-nav">
+                        {% if request.session.user_photo %}
+                            <img src="{{ request.session.user_photo }}" alt="Profil" class="nav-avatar">
+                        {% else %}
+                            <i class="fas fa-user-circle nav-avatar-icon"></i>
+                        {% endif %}
+                        <span class="nav-username">{{ request.session.user_prenom }}</span>
+                        <a href="{% url 'mesNotifications' %}" class="notif-link" title="Notifications">
+                            <i class="fas fa-bell"></i>
+                            {% if nb_notif and nb_notif > 0 %}
+                                <span class="notif-badge">{{ nb_notif }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'deconnexion' %}" class="logout-icon btn-logout confirm-action" data-confirm="Voulez-vous vraiment vous déconnecter ?" title="Déconnexion">
+                            <i class="fas fa-power-off"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <a href="{% url 'connexion' %}" class="btn-nav outline">Se connecter</a>
+                    <a href="{% url 'creerCompte' %}" class="btn-nav primary">S'inscrire</a>
+                {% endif %}
+            </div>
+        </nav>
     </header>
 
-    <!-- Contenu des pages -->
+    {% if erreur %}
+        <div class="page-alert alert-error">{{ erreur }}</div>
+    {% endif %}
+    {% if success %}
+        <div class="page-alert alert-success">{{ success }}</div>
+    {% endif %}
+
     {% block content %}
     {% endblock %}
-
+    <script>
+        // Global confirmation handler for links/buttons with class 'confirm-action' or data-confirm attribute
+        document.addEventListener('click', function(e) {
+            var el = e.target.closest && e.target.closest('.confirm-action, [data-confirm]');
+            if (!el) return;
+            // allow clicks on elements that are not anchors/buttons (safety)
+            var message = el.getAttribute('data-confirm') || 'Êtes-vous sûr de continuer ?';
+            if (!confirm(message)) {
+                e.preventDefault();
+                return false;
+            }
+            // If it's an anchor, let the navigation happen; if it's a form button, allow submit
+        });
+    </script>
 </body>
 </html>

@@ -1,12 +1,40 @@
 {% extends "UniShare/base.html" %}
+{% load static %}
+
 {% block content %}
-<h1>Modifier annonce</h1>
+<main class="form-container">
+    <div class="form-card">
+        <div class="form-header-box">
+            <span class="edit-badge"><i class="fas fa-edit"></i> Mode édition</span>
+            <h1>Modifier mon annonce</h1>
+            <p>Mettez à jour les informations de votre annonce : <strong>{{ form.instance.titre }}</strong></p>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
 
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <input type="submit" value="Enregistrer">
-</form>
+            <div class="form-section">
+                <h3><i class="fas fa-sync-alt"></i> Mettre à jour le contenu</h3>
+                <div class="grid-fields">
+                    {{ form.as_p }}
+                </div>
+            </div>
 
-<a href="{% url 'mesAnnonces' %}">Retour</a>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-wide">
+                    <i class="fas fa-save"></i> Enregistrer les modifications
+                </button>
+                <div class="secondary-actions">
+                    <a href="{% url 'annonceDetail' form.instance.id_annonce %}" class="link-cancel">
+                         Annuler
+                    </a>
+                    |
+                    <a href="{% url 'mesAnnonces' %}" class="link-back-dash">
+                        Retour au tableau de bord
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</main>
 {% endblock %}

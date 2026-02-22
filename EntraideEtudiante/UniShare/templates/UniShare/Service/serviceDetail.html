@@ -1,39 +1,109 @@
 {% extends "UniShare/base.html" %}
+{% load static %}
 
 {% block content %}
-    <h2>{{ service.titre }}</h2>
-    <p><strong>Catégorie de service :</strong> {{ service.type_service }}</p>
-    <p><strong>Visibilité :</strong> {{ service.visibilite }}</p>
+<main class="detail-page">
+    <div class="container-detail">
+        <div class="detail-main">
+            <nav class="breadcrumb">
+                <a href="{% url 'listeServices' %}">Services</a> / <span>{{ service.titre }}</span>
+            </nav>
 
-    {% if service.photo %}
-        <img src="{{ service.photo.url }}" alt="photo" width="250">
-    {% endif %}
+            <section class="detail-card">
+                {% if service.photo %}
+                    <div class="detail-image">
+                        <img src="{{ service.photo.url }}" alt="{{ service.titre }}">
+                    </div>
+                {% endif %}
 
-    <p>{{ service.description }}</p>
-    <p><strong>Publié par :</strong> {{ service.utilisateur.nom }} {{ service.utilisateur.prenom }}</p>
-    <p><strong>Date de publication :</strong> {{ service.date_publication|date:"d M Y H:i" }}</p>
-    <p><strong>Date d'expiration :</strong> {{ service.date_expiration|date:"d M Y" }}</p>
-    <p><strong>Date de rencontre :</strong> {{ service.date_rencontre|date:"d M Y H:i" }}</p>
-    <p><strong>Lieu de rencontre :</strong> {{ service.lieu_rencontre }}</p>
-    {% if service.auteur.id == user.id %}
-        
-        <p>Nombre de réservations : {{ service.reservations.count }}</p>
-        <li>
+                <div class="detail-content">
+                    <div class="detail-header">
+                        <span class="badge-type">{{ service.get_type_service_display }}</span>
+                        <h1>{{ service.titre }}</h1>
+                        <p class="publish-date">Publié le {{ service.date_creation|date:"d F Y" }}</p>
+                    </div>
 
-        <a href="{% url 'modifierService' service.id_service %}">Modifier</a>
-        | <a href="{% url 'supprimerService' service.id_service %}">Supprimer</a>
-        {%if service.reservations.count > 0 %}
-            | <a href="{% url 'reservationsService' service.id_service %}">Voir la liste des réservations</a>
-        {% endif %}
-        
-        </li>
-        <p><strong>Statut :</strong> {{ service.statut }}</p>
-    {% endif %}
-    
-    {% if service.auteur.id == user.id %}
-        <a href="{% url 'mesServices' %}">Retour</a>
-    {% else %}
-        <a href="{% url 'listeServices' %}">Retour</a>
-    {% endif %}
+                    <div class="detail-description">
+                        <h3>Description</h3>
+                        <p>{{ service.description|linebreaks }}</p>
+                    </div>
 
+                    <div class="logistics-grid">
+                        <div class="log-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div>
+                                <strong>Lieu</strong>
+                                <p>{{ service.lieu_rencontre|default:"À définir" }}</p>
+                            </div>
+                        </div>
+                        <div class="log-item">
+                            <i class="fas fa-calendar-check"></i>
+                            <div>
+                                <strong>Rendez-vous</strong>
+                                <p>{{ service.date_rencontre|date:"d M Y à H:i"|default:"Non spécifiée" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <aside class="detail-sidebar">
+            <div class="sidebar-card user-card">
+                <h3>Proposé par</h3>
+                <div class="user-info-large">
+                    <img src="https://i.pravatar.cc/60?u={{ service.auteur.id }}" alt="Avatar" class="large-avatar">
+                    <div class="user-text">
+                        <h4>{{ service.auteur.prenom }} {{ service.auteur.nom }}</h4>
+                        <p>{{ service.auteur.ecole }}</p>
+                        <span class="user-badge">{{ service.auteur.get_niveau_display }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-card actions-card">
+                {% if service.auteur.id == request.session.user_id %}
+                    <div class="owner-stats">
+                        <p><strong>Statut :</strong> <span class="status-tag">{{ service.get_statut_display }}</span></p>
+                        <p><strong>Réservations :</strong> {{ service.reservations.count }}</p>
+                    </div>
+                    
+                    <div class="btn-group-vertical">
+                        <a href="{% url 'modifierService' service.id_service %}" class="btn btn-edit">
+                            <i class="fas fa-edit"></i> Modifier
+                        </a>
+                        {% if service.reservations.count > 0 %}
+                            <a href="{% url 'reservationsService' service.id_service %}" class="btn btn-view">
+                                <i class="fas fa-list"></i> Voir les réservations
+                            </a>
+                        {% endif %}
+                        <form method="post" action="{% url 'supprimerService' service.id_service %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-delete confirm-action" data-confirm="Confirmer la suppression de ce service ?">
+                                <i class="fas fa-trash"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="booking-zone">
+                        <p class="price-free">Gratuit / Entraide</p>
+                        {% if request.session.user_id and already_reserved %}
+                            <button class="btn-disabled btn-reserve-large" disabled>Vous avez déjà réservé</button>
+                        {% else %}
+                            <a href="{% url 'reserverService' service.id_service %}" class="btn btn-reserve-large">
+                                Réserver ce service
+                            </a>
+                        {% endif %}
+                        <p class="info-text">En réservant, l'auteur recevra une notification pour valider votre demande.</p>
+                    </div>
+                {% endif %}
+                
+                <hr>
+                <a href="javascript:history.back()" class="link-back">
+                    <i class="fas fa-arrow-left"></i> Retour à la liste
+                </a>
+            </div>
+        </aside>
+    </div>
+</main>
 {% endblock %}

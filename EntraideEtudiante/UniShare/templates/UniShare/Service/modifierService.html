@@ -1,12 +1,50 @@
 {% extends "UniShare/base.html" %}
+{% load static %}
+
 {% block content %}
-<h1>Modifier service</h1>
+<main class="form-container">
+    <div class="form-card">
+        <div class="form-header-box">
+            <span class="edit-badge service-edit"><i class="fas fa-tools"></i> Mode édition service</span>
+            <h1>Modifier mon service</h1>
+            <p>Mise à jour du service : <strong>{{ form.instance.titre }}</strong></p>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
 
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <input type="submit" value="Enregistrer">
-</form>
+            <div class="form-section">
+                <h3><i class="fas fa-sync-alt"></i> Actualiser les détails</h3>
+                <div class="grid-fields">
+                    {{ form.as_p }}
+                </div>
+            </div>
 
-<a href="{% url 'mesAnnonces' %}">Retour</a>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-wide">
+                    <i class="fas fa-save"></i> Enregistrer les modifications
+                </button>
+                <div class="secondary-actions">
+                    <a href="{% url 'serviceDetail' form.instance.id_service %}" class="link-cancel">
+                         Annuler les changements
+                    </a>
+                    |
+                    <a href="{% url 'mesServices' %}" class="link-back-dash">
+                        Retour à mes services
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</main>
+
+<script>
+    // Correction pour les champs date/time lors de l'édition
+    document.addEventListener("DOMContentLoaded", function() {
+        const dateInput = document.querySelector('input[name*="date_rencontre"]');
+        if (dateInput && dateInput.type === "text") {
+            dateInput.type = "datetime-local";
+        }
+    });
+</script>
 {% endblock %}

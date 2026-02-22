@@ -1,23 +1,51 @@
 {% extends "UniShare/base.html" %}
+{% load static %}
 
 {% block content %}
-    
-    <div style="border:1px solid #ccc; padding:12px; margin:10px 0; border-radius:8px;">
-        <h2>Réserver le service : {{ service.titre }}</h2>
+<main class="form-container">
+    <div class="form-card-mini">
+        <div class="form-header-box">
+            <div class="icon-circle bg-primary-light">
+                <i class="fas fa-calendar-plus color-primary"></i>
+            </div>
+            <h1>Confirmer la réservation</h1>
+            <p>Une notification sera envoyée à l'auteur pour validation.</p>
+        </div>
 
-        <p><strong>Type :</strong> {{ service.type_service }}</p>
-        <p>{{ service.description|truncatechars:120 }}</p>
+        <div class="summary-box">
+            <div class="summary-header">
+                <span class="tag-light">{{ service.get_type_service_display }}</span>
+                <h3>{{ service.titre }}</h3>
+            </div>
+            
+            <div class="summary-details">
+                <p><i class="fas fa-user-circle"></i> Proposé par : <strong>{{ service.auteur.prenom }}</strong></p>
+                {% if service.lieu_rencontre %}
+                    <p><i class="fas fa-map-marker-alt"></i> Lieu : {{ service.lieu_rencontre }}</p>
+                {% endif %}
+                {% if service.date_rencontre %}
+                    <p><i class="fas fa-clock"></i> Date : {{ service.date_rencontre|date:"d M Y à H:i" }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="summary-footer">
+                <p class="price-free">Service gratuit</p>
+            </div>
+        </div>
 
-        {% if service.statut %}
-          <p><strong>Statut :</strong> {{ service.statut }}</p>
-        {% endif %}
-      </div>
-
-    <form method="post">
-        {% csrf_token %}
-        <input type="hidden" name="service_id" value="{{ service.id_service }}">
-        <button type="submit">Confirmer la réservation</button>
-    </form>
-
-    <a href="{% url 'serviceDetail' service.id_service %}">Retour au service</a>
+        <form method="post" class="confirmation-form">
+            {% csrf_token %}
+            <input type="hidden" name="service_id" value="{{ service.id_service }}">
+            
+            <div class="form-actions-vertical">
+                <button type="submit" class="btn btn-primary btn-full">
+                    <i class="fas fa-check-circle"></i> Confirmer ma réservation
+                </button>
+                <a href="{% url 'serviceDetail' service.id_service %}" class="btn-link-gray">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</main>
 {% endblock %}

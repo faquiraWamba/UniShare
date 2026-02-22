@@ -1,26 +1,68 @@
 {% extends "UniShare/base.html" %}
+{% load static %}
 
 {% block content %}
-    <h2> Listes des réservations pour le service "{{ service.titre }}"</h2>
-    {% if lesreservations|length == 0 %}
-        <p>Aucune réservation pour ce service.</p>
-    {% else %}
-        <div>
+<main class="dashboard-page">
+    <div class="page-header">
+        <div class="header-titles">
+            <h1><i class="fas fa-tasks"></i> Gestion des réservations</h1>
+            <p class="subtitle">Demandes pour le service : <strong>{{ service.titre }}</strong></p>
+        </div>
+        <a href="{% url 'serviceDetail' service.id_service %}" class="btn-nav outline">
+            <i class="fas fa-eye"></i> Voir le service
+        </a>
+    </div>
+
+    {% if lesreservations %}
+        <div class="reservations-grid">
             {% for reservation in lesreservations %}
-                <a href="{% url 'detailReservation' reservation.id_reservation %}">
-                    <div style="border:1px solid #ccc; padding:12px; margin:10px 0; border-radius:8px;">
-                        <h3>
-                            {{ reservation.utilisateur.nom }} {{ reservation.utilisateur.prenom }}
-                        </h3>
+                <div class="reservation-card">
+                    <div class="res-status-bar {{ reservation.statut|lower }}"></div>
+                    
+                    <div class="res-card-body">
+                        <div class="user-profile-summary">
+                            <img src="https://i.pravatar.cc/80?u={{ reservation.demandeur.id }}" alt="Avatar" class="res-avatar">
+                            <div class="user-details">
+                                <h3>{{ reservation.demandeur.prenom }} {{ reservation.demandeur.nom }}</h3>
+                                <p class="user-school"><i class="fas fa-university"></i> {{ reservation.demandeur.ecole }}</p>
+                                <span class="badge-niveau">{{ reservation.demandeur.get_niveau_display }}</span>
+                            </div>
+                            <div class="status-badge-zone">
+                                <span class="status-pill {{ reservation.statut|lower }}">
+                                    {{ reservation.get_statut_display }}
+                                </span>
+                            </div>
+                        </div>
 
-                        <p><strong>Email :</strong> {{ reservation.utilisateur.email }}</p>
-                        <p><strong>Téléphone :</strong> {{ reservation.utilisateur.telephone }}</p>
+                        <div class="res-info-list">
+                            <div class="info-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>{{ reservation.demandeur.email }}</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-clock"></i>
+                                <span>Demande reçue le {{ reservation.date_creation|date:"d M Y à H:i" }}</span>
+                            </div>
+                        </div>
 
-                        <p style="font-size: 0.9em;">
-                            Réservé le : {{ reservation.date_reservation|date:"d M Y H:i" }}
-                        </p>
+                        <div class="res-card-actions">
+                            <a href="{% url 'detailReservation' reservation.id_reservation %}" class="btn-manage">
+                                <i class="fas fa-cog"></i> Gérer la demande
+                            </a>
+                            <a href="mailto:{{ reservation.demandeur.email }}" class="btn-icon-only" title="Envoyer un mail">
+                                <i class="fas fa-paper-plane"></i>
+                            </a>
+                        </div>
                     </div>
-                </a>
+                </div>
             {% endfor %}
         </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fas fa-inbox"></i></div>
+            <p>Aucune réservation n'a été effectuée pour le moment.</p>
+            <a href="{% url 'mesServices' %}" class="link-back">Retour à mes services</a>
+        </div>
     {% endif %}
+</main>
+{% endblock %}

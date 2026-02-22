@@ -1,20 +1,89 @@
 {% extends "UniShare/base.html" %}
+{% load static %}
 
 {% block content %}
-    <h2>{{ annonce.titre }}</h2>
-    <p><strong>Catégorie :</strong> {{ annonce.categorie }}</p>
-    <p><strong>Visibilité :</strong> {{ annonce.visibilite }}</p>
+<main class="detail-page">
+    <div class="container-detail">
+        <div class="detail-main">
+            <nav class="breadcrumb">
+                <a href="{% url 'listeAnnonces' %}">Annonces</a> / <span>{{ annonce.titre }}</span>
+            </nav>
 
-    {% if annonce.photo %}
-        <img src="{{ annonce.photo.url }}" alt="photo" width="250">
-    {% endif %}
+            <section class="detail-card">
+                {% if annonce.photo %}
+                    <div class="detail-image">
+                        <img src="{{ annonce.photo.url }}" alt="{{ annonce.titre }}">
+                    </div>
+                {% endif %}
 
-    <p>{{ annonce.description }}</p>
-    
-    <li>
+                <div class="detail-content">
+                    <div class="detail-header">
+                        <div class="header-badges">
+                            <span class="badge-type category-{{ annonce.categorie|lower }}">
+                                {{ annonce.get_categorie_display }}
+                            </span>
+                            <span class="vis-indicator {{ annonce.visibilite|lower }}">
+                                <i class="fas fa-eye"></i> {{ annonce.get_visibilite_display }}
+                            </span>
+                        </div>
+                        <h1>{{ annonce.titre }}</h1>
+                        <p class="publish-date">Publié le {{ annonce.date_creation|date:"d F Y" }}</p>
+                    </div>
 
-      <a href="{% url 'modifierAnnonce' annonce.id_annonce %}">Modifier</a>
-      | <a href="{% url 'supprimerAnnonce' annonce.id_annonce %}">Supprimer</a>
-    </li>
-    <a href="{% url 'listeAnnonces' %}">Retour</a>
+                    <div class="detail-description">
+                        <h3>Détails de l'annonce</h3>
+                        <p>{{ annonce.description|linebreaks }}</p>
+                    </div>
+
+                    {% if annonce.date_expiration %}
+                    <div class="expiry-notice">
+                        <i class="fas fa-hourglass-half"></i>
+                        <span>Cette annonce expire le <strong>{{ annonce.date_expiration|date:"d F Y" }}</strong></span>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+
+        <aside class="detail-sidebar">
+            <div class="sidebar-card user-card">
+                <h3>Publié par</h3>
+                <div class="user-info-large">
+                    <img src="https://i.pravatar.cc/60?u={{ annonce.auteur.id }}" alt="Avatar" class="large-avatar">
+                    <div class="user-text">
+                        <h4>{{ annonce.auteur.prenom }} {{ annonce.auteur.nom }}</h4>
+                        <p>{{ annonce.auteur.ecole }}</p>
+                        <span class="user-badge">{{ annonce.auteur.get_niveau_display }}</span>
+                    </div>
+                </div>
+                <div class="user-actions-contact">
+                    <a href="mailto:{{ annonce.auteur.email }}" class="btn btn-contact">
+                        <i class="fas fa-envelope"></i> Contacter par mail
+                    </a>
+                </div>
+            </div>
+
+            {% if annonce.auteur.id == request.session.user_id %}
+            <div class="sidebar-card actions-card">
+                <h3>Gestion de l'annonce</h3>
+                <div class="btn-group-vertical">
+                    <a href="{% url 'modifierAnnonce' annonce.id_annonce %}" class="btn btn-edit">
+                        <i class="fas fa-edit"></i> Modifier l'annonce
+                    </a>
+                    <form method="post" action="{% url 'supprimerAnnonce' annonce.id_annonce %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-delete confirm-action" data-confirm="Supprimer définitivement cette annonce ?">
+                            <i class="fas fa-trash"></i> Supprimer définitivement
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <a href="{% url 'listeAnnonces' %}" class="link-back">
+                <i class="fas fa-arrow-left"></i> Retour aux annonces
+            </a>
+        </aside>
+    </div>
+</main>
 {% endblock %}

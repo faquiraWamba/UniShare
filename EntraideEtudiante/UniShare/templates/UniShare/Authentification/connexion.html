@@ -1,9 +1,28 @@
 {% extends 'UniShare/base.html' %}
+
 {% block content %}
-    <h1>Connexion</h1>
-    <form action="" method="post" novalidate>
-        {% csrf_token %}
-        {{ form.as_p }}
-    <input type="submit" value="Envoyer">
-    </form>
+<main class="form-container">
+    <div class="form-card-mini">
+        <h1>Connexion</h1>
+        
+        <form action="" method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-section">
+                <h3><i class="fas fa-sign-in-alt"></i> Accéder à mon espace</h3>
+                <div class="single-column-fields">
+                    {{ form.as_p }}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Se connecter</button>
+            </div>
+            
+            <div class="form-footer">
+                <p>Pas encore membre ? <a href="{% url 'creerCompte' %}">Créer un compte UniShare</a></p>
+            </div>
+        </form>
+    </div>
+</main>
 {% endblock %}

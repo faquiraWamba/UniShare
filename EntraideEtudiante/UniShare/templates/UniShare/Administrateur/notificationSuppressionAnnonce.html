@@ -13,7 +13,7 @@
     <form method="post">
         {% csrf_token %}
         <p>Êtes-vous sûr de vouloir supprimer l'annonce "{{ annonce.titre }}" ?</p>
-        <button type="submit">Confirmer la suppression</button>
+        <button type="submit" class="confirm-action" data-confirm="Confirmer la suppression de cette annonce ?">Confirmer la suppression</button>
         <a href="{% url 'listeAnnonces' %}">Annuler</a>
     </form>
 {% endblock %}
