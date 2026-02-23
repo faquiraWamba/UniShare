@@ -1,0 +1,37 @@
+{% extends 'UniShare/base.html' %}
+
+{% block title %}Modifier mon Profil - UniShare{% endblock %}
+
+{% block content %}
+<main class="form-container">
+    <div class="form-card">
+        <h1>Modifier mon profil</h1>
+        <form action="" method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="form-section">
+                <h3><i class="fas fa-user"></i> Informations utilisateur</h3>
+                <div class="grid-fields">
+                    {{ user_form.as_p }}
+                </div>
+            </div>
+
+            {% if etu_form %}
+            <div id="etudiant_block" class="form-section">
+                <hr>
+                <h3><i class="fas fa-graduation-cap"></i> Informations étudiant</h3>
+                <div class="grid-fields">
+                    {{ etu_form.as_p }}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                <a href="{% url 'profil' %}" class="btn btn-secondary">Annuler</a>
+            </div>
+        </form>
+        
+    </div>
+</main>
+{% endblock %}

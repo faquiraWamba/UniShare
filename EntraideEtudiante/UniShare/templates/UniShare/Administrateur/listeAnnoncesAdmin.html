@@ -1,0 +1,394 @@
+{% extends "UniShare/base.html" %}
+{% load static %}
+
+{% block content %}
+<main class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <h1><i class="fas fa-bullhorn"></i> Toutes les Annonces</h1>
+            <p class="subtitle">Administrez les annonces de la plateforme ({{ lesannonces|length }} total)</p>
+        </div>
+        <a href="{% url 'dashboardAdmin' %}" class="btn-nav outline">
+            <i class="fas fa-arrow-left"></i> Retour au dashboard
+        </a>
+    </div>
+
+    <!-- Filtres -->
+    <section class="filter-bar">
+        <form method="get" action="" class="filter-form">
+            <div class="filter-group">
+                <label for="categorie"><i class="fas fa-list"></i> Catégorie:</label>
+                <select name="categorie" id="categorie" class="filter-select">
+                    <option value="">Toutes les catégories</option>
+                    {% for value, label in categories_choices %}
+                        <option value="{{ value }}" {% if selected_categorie == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="visibilite"><i class="fas fa-eye"></i> Visibilité:</label>
+                <select name="visibilite" id="visibilite" class="filter-select">
+                    <option value="">Toutes les visibilités</option>
+                    {% for value, label in visibilites_choices %}
+                        <option value="{{ value }}" {% if selected_visibilite == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="sort"><i class="fas fa-sort-amount-down"></i> Trier par :</label>
+                <select name="sort" id="sort">
+                    <option value="-date_creation" {% if sort_by == '-date_creation' %}selected{% endif %}>Plus récentes</option>
+                    <option value="date_creation" {% if sort_by == 'date_creation' %}selected{% endif %}>Plus anciennes</option>
+                    <option value="-date_expiration" {% if sort_by == '-date_expiration' %}selected{% endif %}>Date expiration (décroissant)</option>
+                    <option value="date_expiration" {% if sort_by == 'date_expiration' %}selected{% endif %}>Date expiration (croissant)</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="afficher_expirees">
+                    <input type="checkbox" name="afficher_expirees" id="afficher_expirees" value="true" {% if afficher_expirees %}checked{% endif %}>
+                    <i class="fas fa-history"></i> Afficher les annonces expirées
+                </label>
+            </div>
+
+            <button type="submit" class="btn-filter">Appliquer les filtres</button>
+            <a href="{% url 'listeAnnoncesAdmin' %}" class="btn-reset">Réinitialiser</a>
+        </form>
+    </section>
+
+    <section class="publications-list">
+        {% if lesannonces %}
+            <form method="post" class="form-gestion">
+                {% csrf_token %}
+                
+                <div class="action-buttons" style="margin-bottom: 1rem;">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer les annonces sélectionnées ?')">
+                        <i class="fas fa-trash-alt"></i> Supprimer la sélection
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="manage-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll" onclick="selectAll(this)"></th>
+                                <th>Annonce</th>
+                                <th>Auteur</th>
+                                <th>Catégorie</th>
+                                <th>Visibilité</th>
+                                <th>Expiration</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for annonce in lesannonces %}
+                            <tr>
+                                <td><input type="checkbox" name="annonce_ids[]" value="{{ annonce.id_annonce }}" class="annonce-checkbox"></td>
+                                <td class="td-main">
+                                    <div class="td-content">
+                                        {% if annonce.photo %}
+                                            <img src="{{ annonce.photo.url }}" class="mini-img">
+                                        {% else %}
+                                            <div class="mini-img-placeholder"><i class="fas fa-bullhorn"></i></div>
+                                        {% endif %}
+                                        <div>
+                                            <a href="{% url 'annonceDetail' annonce.id_annonce %}" class="title-link">{{ annonce.titre }}</a>
+                                            {% if annonce.is_expired %}
+                                                <span class="expired-label">Expiré</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{% url 'afficherProfilUtilisateur' annonce.auteur.id %}" class="author-link" title="Voir le profil">
+                                        {{ annonce.auteur.prenom }} {{ annonce.auteur.nom }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="tag-light">{{ annonce.get_categorie_display }}</span>
+                                </td>
+                                <td>
+                                    <span class="vis-badge {{ annonce.visibilite|lower }}">
+                                        <i class="fas fa-eye"></i> {{ annonce.get_visibilite_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="date-expire {% if annonce.is_expired %}expired{% endif %}">
+                                        {% if annonce.is_expired %}
+                                            <strong>Expiré</strong>
+                                        {% endif %}
+                                        {{ annonce.date_expiration|date:"d/m/Y"|default:"Permanente" }}
+                                    </span>
+                                </td>
+                                <td class="text-right actions-cell">
+                                    <a href="{% url 'annonceDetail' annonce.id_annonce %}" class="btn-icon" title="Voir les détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'notificationSuppression' annonce.id_annonce %}" class="btn-icon btn-danger-icon" title="Supprimer">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </form>
+        {% else %}
+            <div class="empty-dashboard">
+                <i class="fas fa-search" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p>Aucune annonce trouvée.</p>
+            </div>
+        {% endif %}
+    </section>
+</main>
+
+<script>
+    function selectAll(checkbox) {
+        const annonces = document.querySelectorAll('.annonce-checkbox');
+        annonces.forEach(item => item.checked = checkbox.checked);
+    }
+</script>
+
+<style>
+.filter-bar {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.filter-group select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 200px;
+}
+
+.btn-filter, .btn-reset {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-filter {
+    background: #007bff;
+    color: white;
+}
+
+.btn-filter:hover {
+    background: #0056b3;
+}
+
+.btn-reset {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-reset:hover {
+    background: #5a6268;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+.table-container {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.manage-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.manage-table th,
+.manage-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.manage-table th {
+    background: #f9f9f9;
+    font-weight: 600;
+}
+
+.manage-table tr:hover {
+    background: #f5f5f5;
+}
+
+.td-main {
+    min-width: 250px;
+}
+
+.td-content {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.mini-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.mini-img-placeholder {
+    width: 50px;
+    height: 50px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+}
+
+.title-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.title-link:hover {
+    text-decoration: underline;
+}
+
+.expired-label {
+    background: #dc3545;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+
+.tag-light {
+    background: #f0f0f0;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.vis-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.vis-badge.public {
+    background: #d4edda;
+    color: #155724;
+}
+
+.vis-badge.ecole {
+    background: #e7f3ff;
+    color: #0056b3;
+}
+
+.vis-badge.promo {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.date-expire {
+    color: #666;
+}
+
+.date-expire.expired {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.btn-icon {
+    color: #007bff;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 1.1rem;
+}
+
+.btn-icon:hover {
+    color: #0056b3;
+}
+
+.btn-danger-icon {
+    color: #dc3545;
+}
+
+.btn-danger-icon:hover {
+    color: #c82333;
+}
+
+.author-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.author-link:hover {
+    text-decoration: underline;
+}
+
+.empty-dashboard {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 8px;
+    color: #666;
+}
+
+.empty-dashboard i {
+    color: #ddd;
+}
+</style>
+{% endblock %}

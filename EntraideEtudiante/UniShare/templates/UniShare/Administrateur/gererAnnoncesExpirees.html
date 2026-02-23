@@ -1,0 +1,104 @@
+{% extends "UniShare/base.html" %}
+
+{% block content %}
+    <h1>Gestion des annonces et services expirés</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div style="margin-bottom: 20px;">
+            <button type="submit" name="action" value="supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer les éléments sélectionnés ?')">
+                Supprimer les éléments sélectionnés
+            </button>
+        </div>
+
+        <!-- Annonces expirées -->
+        {% if annonces_expirees %}
+        <div style="margin-bottom: 30px;">
+            <h2>Annonces expirées ({{ annonces_expirees.count }})</h2>
+            <table border="1" cellpadding="10">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAllAnnonces" onclick="selectAllAnnonces(this)"></th>
+                        <th>Titre</th>
+                        <th>Auteur</th>
+                        <th>Catégorie</th>
+                        <th>Date de création</th>
+                        <th>Date d'expiration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for annonce in annonces_expirees %}
+                    <tr>
+                        <td><input type="checkbox" name="annonce_ids[]" value="{{ annonce.id_annonce }}" class="annonce-checkbox"></td>
+                        <td>{{ annonce.titre }}</td>
+                        <td>{{ annonce.auteur.prenom }} {{ annonce.auteur.nom }}</td>
+                        <td>{{ annonce.get_categorie_display }}</td>
+                        <td>{{ annonce.date_creation }}</td>
+                        <td>{{ annonce.date_expiration }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p><em>Aucune annonce expirée.</em></p>
+        {% endif %}
+
+        <!-- Services expirés -->
+        {% if services_expires %}
+        <div style="margin-bottom: 30px;">
+            <h2>Services expirés ({{ services_expires.count }})</h2>
+            <table border="1" cellpadding="10">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAllServices" onclick="selectAllServices(this)"></th>
+                        <th>Titre</th>
+                        <th>Auteur</th>
+                        <th>Type</th>
+                        <th>Statut</th>
+                        <th>Date de création</th>
+                        <th>Date d'expiration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for service in services_expires %}
+                    <tr>
+                        <td><input type="checkbox" name="service_ids[]" value="{{ service.id_service }}" class="service-checkbox"></td>
+                        <td>{{ service.titre }}</td>
+                        <td>{{ service.auteur.prenom }} {{ service.auteur.nom }}</td>
+                        <td>{{ service.get_type_service_display }}</td>
+                        <td>{{ service.get_statut_display }}</td>
+                        <td>{{ service.date_creation }}</td>
+                        <td>{{ service.date_expiration }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p><em>Aucun service expiré.</em></p>
+        {% endif %}
+
+        <div style="margin-top: 20px;">
+            <button type="submit" name="action" value="supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer les éléments sélectionnés ?')">
+                Supprimer les éléments sélectionnés
+            </button>
+        </div>
+    </form>
+
+    <script>
+        function selectAllAnnonces(checkbox) {
+            const annonces = document.querySelectorAll('.annonce-checkbox');
+            annonces.forEach(item => item.checked = checkbox.checked);
+        }
+
+        function selectAllServices(checkbox) {
+            const services = document.querySelectorAll('.service-checkbox');
+            services.forEach(item => item.checked = checkbox.checked);
+        }
+    </script>
+
+    <p><a href="{% url 'dashboardAdmin' %}">Retour au tableau de bord</a></p>
+
+{% endblock %}

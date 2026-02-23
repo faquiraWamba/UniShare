@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 # UTILISATEUR
@@ -14,6 +15,8 @@ class Utilisateur(models.Model):
     mot_de_passe = models.fields.CharField(max_length=128)  # hashé idéalement
     role = models.fields.CharField(max_length=3, choices=Role.choices, default=Role.ETUDIANT)
     photo = models.ImageField(upload_to="photos/utilisateurs/", blank=True, null=True)
+    demande_suppression_en_cours = models.BooleanField(default=False)
+    date_demande_suppression = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.nom} {self.prenom}"
@@ -70,6 +73,12 @@ class Annonce(models.Model):
     def __str__(self):
         return f"{self.titre}"
 
+    @property
+    def is_expired(self):
+        if not self.date_expiration:
+            return False
+        return self.date_expiration < timezone.now()
+
 #SERVICE
 class Service(Annonce):
     class StatutService(models.TextChoices):
@@ -122,7 +131,7 @@ class Notification(models.Model):
     lu = models.fields.BooleanField(default=False)
     date = models.fields.DateTimeField(auto_now_add=True)
     type_notification = models.CharField(max_length=20, choices=TypeNotification.choices, default=TypeNotification.ANNONCE)
-    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name="notifications")
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name="notifications", null=True, blank=True)
 
     def __str__(self):
         return f"{self.titre}"

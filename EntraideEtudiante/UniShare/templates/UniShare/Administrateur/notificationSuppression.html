@@ -1,0 +1,345 @@
+{% extends "UniShare/base.html" %}
+{% load static %}
+
+{% block content %}
+<main class="notification-page">
+    <div class="notification-header">
+        <h1>
+            <i class="fas fa-trash-alt"></i>
+            {% if is_service %}
+                Suppression d'un Service
+            {% else %}
+                Suppression d'une Annonce
+            {% endif %}
+        </h1>
+        <p class="subtitle">Personnalisez le message de notification avant suppression</p>
+    </div>
+
+    <div class="notification-container">
+        <div class="objet-preview">
+            {% if is_service %}
+                <h2>Service à supprimer</h2>
+            {% else %}
+                <h2>Annonce à supprimer</h2>
+            {% endif %}
+            <div class="preview-card">
+                <div class="preview-header">
+                    <h3>{{ objet.titre }}</h3>
+                    <span class="badge category-{{ objet.categorie|lower }}">
+                        {{ objet.get_categorie_display }}
+                    </span>
+                </div>
+                <p class="preview-description">{{ objet.description|truncatechars:200 }}</p>
+                
+                {% if is_service %}
+                    <div class="service-info">
+                        {% if objet.type_service %}
+                            <span><strong>Type:</strong> {{ objet.get_type_service_display }}</span>
+                        {% endif %}
+                        {% if objet.date_rencontre %}
+                            <span><strong>Date de rencontre:</strong> {{ objet.date_rencontre|date:"d/m/Y H:i" }}</span>
+                        {% endif %}
+                        {% if objet.lieu_rencontre %}
+                            <span><strong>Lieu:</strong> {{ objet.lieu_rencontre }}</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
+                
+                <div class="preview-footer">
+                    <span>Auteur: <strong>{{ objet.auteur.prenom }} {{ objet.auteur.nom }}</strong></span>
+                    <span>Créée: {{ objet.date_creation|date:"d/m/Y" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="notification-form-section">
+            <h2>Message de notification</h2>
+            <form method="post" class="notification-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="titre">Titre de la notification *</label>
+                    <input type="text" id="titre" name="titre" 
+                           value="{% if is_service %}Service supprimé{% else %}Annonce supprimée{% endif %}" 
+                           required>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Message *</label>
+                    <textarea id="message" name="message" rows="6" required>{% if is_service %}Votre service « {{ objet.titre }} » a été supprimé de la plateforme. Si vous avez des questions, veuillez contacter un administrateur.{% else %}Votre annonce « {{ objet.titre }} » a été supprimée de la plateforme. Si vous avez des questions, veuillez contacter un administrateur.{% endif %}</textarea>
+                </div>
+
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    {% if is_service %}
+                        <p><strong>Note:</strong> Cette notification sera envoyée à l'auteur du service{% if objet.reservation_set.exists %}, aux utilisateurs ayant réservé ce service{% endif %} et archivée dans leur historique.</p>
+                    {% else %}
+                        <p><strong>Note:</strong> Cette notification sera envoyée à l'auteur de l'annonce et archivée dans son historique.</p>
+                    {% endif %}
+                </div>
+
+                <div class="form-actions">
+                    <a href="{% if is_service %}{% url 'listeServicesAdmin' %}{% else %}{% url 'listeAnnoncesAdmin' %}{% endif %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Annuler
+                    </a>
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.')">
+                        <i class="fas fa-trash-alt"></i> Supprimer définitivement
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<style>
+.notification-page {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.notification-header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.notification-header h1 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.notification-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.objet-preview {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.objet-preview h2 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.preview-card {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border-left: 4px solid #dc3545;
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+    gap: 1rem;
+}
+
+.preview-header h3 {
+    margin: 0;
+    color: #333;
+    flex: 1;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.category-job {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.category-bonplan {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.category-event {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.category-autre {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.preview-description {
+    color: #666;
+    font-size: 0.95rem;
+    margin: 1rem 0;
+    line-height: 1.6;
+}
+
+.service-info {
+    background: white;
+    padding: 1rem;
+    border-radius: 4px;
+    margin: 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.service-info span {
+    color: #666;
+}
+
+.service-info strong {
+    color: #333;
+}
+
+.preview-footer {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    color: #999;
+    font-size: 0.85rem;
+}
+
+.notification-form-section {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.notification-form-section h2 {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.notification-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input,
+.form-group textarea {
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+.info-box {
+    background: #e7f3ff;
+    border-left: 4px solid #007bff;
+    padding: 1rem;
+    border-radius: 4px;
+    display: flex;
+    gap: 1rem;
+    align-items: start;
+}
+
+.info-box i {
+    color: #007bff;
+    margin-top: 0.2rem;
+}
+
+.info-box p {
+    margin: 0;
+    color: #004085;
+    font-size: 0.9rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+@media (max-width: 768px) {
+    .notification-container {
+        grid-template-columns: 1fr;
+    }
+
+    .preview-footer {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

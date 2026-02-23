@@ -6,7 +6,13 @@
     <div class="container-detail">
         <div class="detail-main">
             <nav class="breadcrumb">
-                <a href="{% url 'listeAnnonces' %}">Annonces</a> / <span>{{ annonce.titre }}</span>
+                {% if is_admin %}
+                    <a href="{% url 'listeAnnoncesAdmin' %}">Toutes les Annonces</a> / <span>{{ annonce.titre }}</span>
+                {% elif annonce.auteur.id == request.session.user_id %}
+                    <a href="{% url 'mesAnnonces' %}">Mes Annonces</a> / <span>{{ annonce.titre }}</span>
+                {% else %}
+                    <a href="{% url 'listeAnnonces' %}">Annonces</a> / <span>{{ annonce.titre }}</span>
+                {% endif %}
             </nav>
 
             <section class="detail-card">
@@ -49,17 +55,24 @@
             <div class="sidebar-card user-card">
                 <h3>Publié par</h3>
                 <div class="user-info-large">
-                    <img src="https://i.pravatar.cc/60?u={{ annonce.auteur.id }}" alt="Avatar" class="large-avatar">
+                    {% if annonce.auteur.photo %}
+                        <img src="{{ annonce.auteur.photo.url }}" alt="Avatar" class="large-avatar">
+                    {% else %}
+                        <i class="fas fa-user-circle" style="font-size: 60px; color: #999;"></i>
+                    {% endif %}
                     <div class="user-text">
                         <h4>{{ annonce.auteur.prenom }} {{ annonce.auteur.nom }}</h4>
                         <p>{{ annonce.auteur.ecole }}</p>
-                        <span class="user-badge">{{ annonce.auteur.get_niveau_display }}</span>
+                        {% if annonce.auteur.role in "ETU,ANC" %}
+                            <span class="user-badge">{{ annonce.auteur.get_niveau_display }}</span>
+                            <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+                                <strong>Formation:</strong> {{ annonce.auteur.formation }}<br>
+                                <strong>Promo:</strong> {{ annonce.auteur.promo }}
+                            </p>
+                        {% else %}
+                            <span class="user-badge">{{ annonce.auteur.get_niveau_display }}</span>
+                        {% endif %}
                     </div>
-                </div>
-                <div class="user-actions-contact">
-                    <a href="mailto:{{ annonce.auteur.email }}" class="btn btn-contact">
-                        <i class="fas fa-envelope"></i> Contacter par mail
-                    </a>
                 </div>
             </div>
 
@@ -78,11 +91,29 @@
                     </form>
                 </div>
             </div>
+            {% elif is_admin %}
+            <div class="sidebar-card actions-card">
+                <h3>Gestion administrative</h3>
+                <div class="btn-group-vertical">
+                    <form method="post" action="{% url 'supprimerAnnonce' annonce.id_annonce %}" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-delete confirm-action" data-confirm="Supprimer définitivement cette annonce ?">
+                            <i class="fas fa-trash"></i> Supprimer l'annonce
+                        </button>
+                    </form>
+                </div>
+            </div>
             {% endif %}
 
-            <a href="{% url 'listeAnnonces' %}" class="link-back">
-                <i class="fas fa-arrow-left"></i> Retour aux annonces
-            </a>
+            {% if is_admin %}
+                <a href="{% url 'listeAnnoncesAdmin' %}" class="link-back">
+                    <i class="fas fa-arrow-left"></i> Retour aux annonces
+                </a>
+            {% else %}
+                <a href="{% url 'listeAnnonces' %}" class="link-back">
+                    <i class="fas fa-arrow-left"></i> Retour aux annonces
+                </a>
+            {% endif %}
         </aside>
     </div>
 </main>

@@ -1,13 +1,72 @@
 {% extends 'UniShare/base.html' %}
 
+{% block title %}Mon Profil - UniShare{% endblock %}
+
 {% block content %}
-<h1>Profil utilisateur</h1>
-<p><strong>Nom :</strong> {{ utilisateur.nom }}</p>
-<p><strong>Prénom :</strong> {{ utilisateur.prenom }}</p>
-<p><strong>Email :</strong> {{ utilisateur.email }}</p>
-<p><strong>Rôle :</strong> {{ utilisateur.get_role_display }}</p>
-{% if utilisateur.photo %}
-    <p><strong>Photo de profil :</strong></p>
-    <img src="{{ utilisateur.photo.url }}" alt="Photo de profil" style="max-width:200px; max-height:200px;">
-{% endif %}
+<main class="dashboard-page">
+    <div class="page-header">     
+        <div class="header-titles">
+            <h1><i class="fas fa-user"></i> Mon Profil</h1>
+            <p class="subtitle">Gérez les informations de votre compte UniShare</p>
+        </div>
+        <a href="{% url 'modifierProfil' %}" class="btn-nav outline">
+            <i class="fas fa-edit"></i> Modifier mon profil
+        </a>
+        {% if not utilisateur.demande_suppression_en_cours %}
+        <form method="post" action="{% url 'supprimerProfil' %}" style="display:inline">
+                {% csrf_token %}
+            <button type="submit" class="btn btn-danger confirm-action" data-confirm="Vous allez demander la suppression de votre compte. Vous aurez 30 jours pour annuler cette demande.">
+                <i class="fas fa-trash-alt"></i> Supprimer mon compte
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    
+    <!-- Alerte si suppression en cours -->
+    {% if utilisateur.demande_suppression_en_cours %}
+    <div class="alert alert-warning" style="margin: 1rem 0; padding: 1rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
+        <i class="fas fa-exclamation-triangle"></i> <strong>Attention :</strong> Votre compte est en attente de suppression. 
+        Il sera définitivement supprimé dans 30 jours à partir du {{ utilisateur.date_demande_suppression|date:"d/m/Y à H:i" }}.
+        <form method="post" action="{% url 'annulerDemandeSuppressionProfil' %}" style="display:inline; margin-left: 1rem;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-secondary">
+                <i class="fas fa-undo"></i> Annuler la suppression
+            </button>
+        </form>
+    </div>
+    {% endif %}
+    
+    <div class="profile-content">
+        <div class="profile-section">
+            <h2>Informations personnelles</h2>
+            <p><strong>Nom :</strong> {{ utilisateur.nom }}</p>
+            <p><strong>Prénom :</strong> {{ utilisateur.prenom }}</p>
+            <p><strong>Email :</strong> {{ utilisateur.email }}</p>
+            
+            <!-- Afficher le rôle de l'utilisateur -->
+            <p>
+                <strong>Rôle :</strong>
+                {% if user_role == "ETU" %}
+                    <span class="badge badge-student">Étudiant</span>
+                {% elif user_role == "ANC" %}
+                    <span class="badge badge-alumni">Ancien</span>
+                {% elif user_role == "ADM" %}
+                    <span class="badge badge-admin">Administrateur</span>
+                {% else %}
+                    <span class="badge">{{ user_role }}</span>
+                {% endif %}
+            </p>
+            
+            <!-- Afficher les infos Etudiant si applicable -->
+            {% if user_role == "ETU" or user_role == "ANC" %}
+                <p><strong>École :</strong> {{ utilisateur.ecole }}</p>
+                <p><strong>Niveau d'étude :</strong> {{ utilisateur.get_niveau_display }}</p>
+                <p><strong>Formation :</strong> {{ utilisateur.formation }}</p>
+                <p><strong>Promotion :</strong> {{ utilisateur.promo }}</p>
+            {% endif %}
+        </div>
+
+        
+    </div>
+</main>
 {% endblock %}

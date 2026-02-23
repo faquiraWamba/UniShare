@@ -1,0 +1,52 @@
+{% extends "UniShare/base.html" %}
+{% load static %}
+
+{% block content %}
+<main class="form-page">
+    <div class="page-header">
+        <div class="header-titles">
+            <h1><i class="fas fa-edit"></i> Changer le statut du service</h1>
+            <p class="subtitle">{{ service.titre }}</p>
+        </div>
+    </div>
+
+    <div class="form-container" style="max-width: 600px; margin: 30px auto; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+        <form method="POST" class="form-content">
+            {% csrf_token %}
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="statut" style="display: block; margin-bottom: 8px; font-weight: 500;">
+                    <i class="fas fa-cogs"></i> Nouveau statut
+                </label>
+                <select name="statut" id="statut" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;">
+                    <option value="">-- Sélectionner un statut --</option>
+                    {% for value, label in statuts %}
+                        <option value="{{ value }}" {% if service.statut == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <small style="display: block; margin-top: 8px; color: #666;">
+                    <strong>Disponible :</strong> Le service est visible et peut être réservé<br>
+                    <strong>Réservé :</strong> Le service n'est plus visible et ne peut pas être réservé
+                </small>
+            </div>
+
+            <div class="form-info" style="background: #e7f3ff; border-left: 4px solid #2196F3; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Statut actuel :</strong> {{ service.get_statut_display }}
+            </div>
+
+            <div class="form-actions" style="display: flex; gap: 10px; justify-content: center;">
+                <button type="submit" class="btn-action" style="padding: 12px 32px; border: none; border-radius: 4px; cursor: pointer; background-color: #28a745; color: white; font-weight: 500;">
+                    <i class="fas fa-save"></i> Valider
+                </button>
+                <a href="{% url 'mesServices' %}" class="btn-secondary" style="padding: 12px 32px; text-decoration: none; border-radius: 4px; cursor: pointer; background-color: #6c757d; color: white; font-weight: 500; display: inline-block;">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+
+</main>
+{% endblock %}

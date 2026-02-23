@@ -17,23 +17,49 @@
     <section class="filter-bar">
         <form method="get" action="{% url 'listeServices' %}" class="filter-form">
             <div class="filter-group">
-                <label for="filtre"><i class="fas fa-filter"></i> Type :</label>
-                <select name="filtre" id="filtre" onchange="this.form.submit()">
+                <label for="type_service"><i class="fas fa-filter"></i> Type :</label>
+                <select name="type_service" id="type_service">
                     <option value="">Tous les types</option>
-                    {% for type in types_services %}
-                        <option value="{{ type }}" {% if request.GET.filtre == type %}selected{% endif %}>{{ type }}</option>
+                    {% for value, label in types_choices %}
+                        <option value="{{ value }}" {% if selected_type_service == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="filter-group">
-                <label for="tri"><i class="fas fa-sort-amount-down"></i> Trier par :</label>
-                <select name="tri" id="tri" onchange="this.form.submit()">
-                    <option value="date_creation" {% if request.GET.tri == 'date_creation' %}selected{% endif %}>Plus récents</option>
-                    <option value="date_rencontre" {% if request.GET.tri == 'date_rencontre' %}selected{% endif %}>Date de rencontre</option>
+                <label for="visibilite"><i class="fas fa-eye"></i> Visibilité :</label>
+                <select name="visibilite" id="visibilite">
+                    <option value="">Toutes</option>
+                    {% for value, label in visibilites_choices %}
+                        <option value="{{ value }}" {% if selected_visibilite == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
                 </select>
             </div>
+
+            <div class="filter-group">
+                <label for="lieu"><i class="fas fa-map-marker-alt"></i> Lieu :</label>
+                <select name="lieu" id="lieu">
+                    <option value="">Tous</option>
+                    {% for lieu in lieux_choices %}
+                        <option value="{{ lieu }}" {% if selected_lieu == lieu %}selected{% endif %}>{{ lieu }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="sort"><i class="fas fa-sort-amount-down"></i> Trier par :</label>
+                <select name="sort" id="sort">
+                    <option value="-date_creation" {% if sort_by == '-date_creation' %}selected{% endif %}>Plus récents</option>
+                    <option value="date_creation" {% if sort_by == 'date_creation' %}selected{% endif %}>Plus anciens</option>
+                    <option value="-date_rencontre" {% if sort_by == '-date_rencontre' %}selected{% endif %}>Date de rencontre (récente)</option>
+                    <option value="date_rencontre" {% if sort_by == 'date_rencontre' %}selected{% endif %}>Date de rencontre (ancienne)</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-filter">Appliquer les filtres</button>
+            <a href="{% url 'listeServices' %}" class="btn-reset">Réinitialiser</a>
         </form>
+        <div class="info-count">{{ lesservices|length }} service(s) trouvé(s)</div>
     </section>
 
     {% if lesservices %}
@@ -69,7 +95,11 @@
                             {% if service.lieu_rencontre %}
                                 <span><i class="fas fa-map-marker-alt"></i> {{ service.lieu_rencontre }}</span>
                             {% endif %}
-                            <span><i class="fas fa-calendar-alt"></i> {{ service.date_creation|date:"d M" }}</span>
+                            {% if service.date_rencontre %}
+                                <span><i class="fas fa-clock"></i> {{ service.date_rencontre|date:"d/m/Y H:i" }}</span>
+                            {% else %}
+                                <span><i class="fas fa-calendar-alt"></i> {{ service.date_creation|date:"d M" }}</span>
+                            {% endif %}
                         </div>
                     </div>
 

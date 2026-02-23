@@ -24,8 +24,8 @@ def verifier_etudiant(request):
     return None
 
 def verifier_admin(request):
-    if request.session.get('user_role') != "ADMIN":
-        return render(request, "UniShare/Annonce/listeAnnonces.html", {
+    if request.session.get('user_role') != "ADM":
+        return render(request, "UniShare/Authentification/connexion.html", {
             "erreur": "Accès réservé aux administrateurs."
         })
     return None

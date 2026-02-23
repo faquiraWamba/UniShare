@@ -17,7 +17,7 @@
     <section class="filter-bar">
         <form method="GET" class="filter-form">
             <div class="filter-group">
-                <label for="categorie">Catégorie:</label>
+                <label for="categorie"><i class="fas fa-list"></i> Catégorie:</label>
                 <select name="categorie" id="categorie" class="filter-select">
                     <option value="">Toutes les catégories</option>
                     {% for value, label in categories_choices %}
@@ -27,7 +27,7 @@
             </div>
 
             <div class="filter-group">
-                <label for="visibilite">Visibilité:</label>
+                <label for="visibilite"><i class="fas fa-eye"></i> Visibilité:</label>
                 <select name="visibilite" id="visibilite" class="filter-select">
                     <option value="">Toutes les visibilités</option>
                     {% for value, label in visibilites_choices %}
@@ -37,20 +37,13 @@
             </div>
 
             <div class="filter-group">
-                <label for="sort">Trier par:</label>
+                <label for="sort"><i class="fas fa-sort-amount-down"></i> Trier par:</label>
                 <select name="sort" id="sort" class="filter-select">
                     <option value="-date_creation" {% if sort_by == '-date_creation' %}selected{% endif %}>Plus récent</option>
                     <option value="date_creation" {% if sort_by == 'date_creation' %}selected{% endif %}>Plus ancien</option>
                     <option value="-date_expiration" {% if sort_by == '-date_expiration' %}selected{% endif %}>Expire en dernier</option>
                     <option value="date_expiration" {% if sort_by == 'date_expiration' %}selected{% endif %}>Expire en premier</option>
                 </select>
-            </div>
-
-            <div class="filter-group">
-                <label for="afficher_expirees">
-                    <input type="checkbox" name="afficher_expirees" id="afficher_expirees" value="true" {% if afficher_expirees %}checked{% endif %}>
-                    Afficher les annonces expirées
-                </label>
             </div>
 
             <button type="submit" class="btn-filter">Appliquer les filtres</button>
@@ -78,7 +71,11 @@
 
                     <div class="card-body">
                         <div class="author-info">
-                            <img src="https://i.pravatar.cc/30?u={{ annonce.auteur.id }}" alt="Avatar" class="mini-avatar">
+                            {% if annonce.auteur.photo %}
+                                <img src="{{ annonce.auteur.photo.url }}" alt="Avatar" class="mini-avatar">
+                            {% else %}
+                                <i class="fas fa-user-circle" style="font-size: 30px; color: #999;"></i>
+                            {% endif %}
                             <span>{{ annonce.auteur.prenom }} · {{ annonce.auteur.ecole }}</span>
                         </div>
                         
@@ -111,8 +108,5 @@
         </div>
     {% endif %}
 
-    <div class="bottom-actions">
-        <a href="{% url 'accueil' %}" class="link-back"><i class="fas fa-chevron-left"></i> Retour à l'accueil</a>
-    </div>
 </main>
 {% endblock %}

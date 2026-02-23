@@ -9,7 +9,7 @@
             <p class="subtitle">Restez informé de l'activité sur vos services et annonces</p>
         </div>
         {% if lesnotifications %}
-        <form action="{% url 'toutMarquerLu' %}" method="post">
+        <form action="{% url 'marquerToutesNotificationsCommeLues' %}" method="post">
             {% csrf_token %}
             <button type="submit" class="btn-text-action">Tout marquer comme lu</button>
         </form>

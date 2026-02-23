@@ -1,0 +1,239 @@
+{% extends "UniShare/base.html" %}
+
+{% block content %}
+<main class="dashboard-page">
+    <div class="page-header">
+        <div class="header-titles">
+            <h1><i class="fas fa-user-slash"></i> Gestion des comptes en suppression</h1>
+            <p class="subtitle">Gérez les comptes en attente de suppression définitive</p>
+        </div>
+        <a href="{% url 'dashboardAdmin' %}" class="btn-nav outline">
+            <i class="fas fa-arrow-left"></i> Retour au dashboard
+        </a>
+    </div>
+
+    {% if comptes_suppression %}
+    <div class="table-section">
+        <form method="post" class="form-gestion">
+            {% csrf_token %}
+            
+            <div class="action-buttons" style="margin-bottom: 1rem;">
+                <button type="submit" name="action" value="supprimer" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer définitivement ces comptes ?')">
+                    <i class="fas fa-trash-alt"></i> Supprimer définitivement
+                </button>
+                <button type="submit" name="action" value="annuler" class="btn btn-secondary">
+                    <i class="fas fa-undo"></i> Annuler les demandes
+                </button>
+            </div>
+
+            <div class="table-container">
+                <table class="manage-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" onclick="selectAll(this)"></th>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Rôle</th>
+                            <th>Date de demande</th>
+                            <th>Jours avant suppression</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for compte in comptes_suppression %}
+                        <tr>
+                            <td><input type="checkbox" name="compte_ids[]" value="{{ compte.id }}" class="compte-checkbox"></td>
+                            <td>{{ compte.prenom }} {{ compte.nom }}</td>
+                            <td>{{ compte.email }}</td>
+                            <td>
+                                {% if compte.role == "ETU" %}
+                                    <span class="badge badge-student">Étudiant</span>
+                                {% elif compte.role == "ANC" %}
+                                    <span class="badge badge-alumni">Ancien</span>
+                                {% elif compte.role == "ADM" %}
+                                    <span class="badge badge-admin">Admin</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ compte.date_demande_suppression|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                {% load tz %}
+                                {% now "U" as now_u %}
+                                {% with demande_timestamp=compte.date_demande_suppression|date:"U" %}
+                                    {% with diff_seconds=now_u|add:"-"|add:demande_timestamp %}
+                                        {% with days_remaining=30|add:"-"|add:diff_seconds|divisibleby:86400 %}
+                                            {% if days_remaining > 0 %}
+                                                <span class="status warning" title="Suppression automatique dans {{ days_remaining }} jour(s)">
+                                                    <i class="fas fa-hourglass-end"></i> {{ days_remaining }} jour(s)
+                                                </span>
+                                            {% else %}
+                                                <span class="status danger">
+                                                    <i class="fas fa-exclamation-triangle"></i> À supprimer
+                                                </span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% endwith %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="action-buttons" style="margin-top: 1rem;">
+                <button type="submit" name="action" value="supprimer" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer définitivement ces comptes ?')">
+                    <i class="fas fa-trash-alt"></i> Supprimer définitivement
+                </button>
+                <button type="submit" name="action" value="annuler" class="btn btn-secondary">
+                    <i class="fas fa-undo"></i> Annuler les demandes
+                </button>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-check-circle" style="font-size: 3rem; color: #28a745; margin-bottom: 1rem;"></i>
+        <h2>Aucun compte en attente de suppression</h2>
+        <p>Tous les utilisateurs ont des comptes actifs.</p>
+    </div>
+    {% endif %}
+
+    <script>
+        function selectAll(checkbox) {
+            const comptes = document.querySelectorAll('.compte-checkbox');
+            comptes.forEach(item => item.checked = checkbox.checked);
+        }
+    </script>
+
+    <style>
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .badge-student {
+        background: #e7f3ff;
+        color: #0056b3;
+    }
+
+    .badge-alumni {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .badge-admin {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .status.warning {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status.danger {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 8px;
+        color: #666;
+    }
+
+    .empty-state h2 {
+        margin: 0.5rem 0;
+        color: #333;
+    }
+
+    .empty-state p {
+        margin: 0.5rem 0 0 0;
+        color: #999;
+    }
+
+    .table-section {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 1rem 0;
+    }
+
+    .manage-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .manage-table th,
+    .manage-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    .manage-table th {
+        background: #f9f9f9;
+        font-weight: 600;
+    }
+
+    .manage-table tr:hover {
+        background: #f5f5f5;
+    }
+    </style>
+
+</main>
+{% endblock %}
+

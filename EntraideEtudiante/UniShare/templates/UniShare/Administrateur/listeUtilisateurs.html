@@ -1,0 +1,277 @@
+{% extends "UniShare/base.html" %}
+{% load static %}
+
+{% block content %}
+<main class="dashboard-page">
+    <div class="page-header">
+        <div class="header-titles">
+            <h1><i class="fas fa-users-cog"></i> Gestion des utilisateurs</h1>
+            <p class="subtitle">Gérez les comptes et les rôles des utilisateurs de la plateforme</p>
+        </div>
+        <a href="{% url 'dashboardAdmin' %}" class="btn-nav outline">
+            <i class="fas fa-arrow-left"></i> Retour au dashboard
+        </a>
+    </div>
+    
+    <!-- Filtres -->
+    <section class="filter-bar">
+        <form method="get" action="" class="filter-form">
+            <div class="filter-group">
+                <label for="role"><i class="fas fa-filter"></i> Rôle :</label>
+                <select name="role" id="role">
+                    <option value="">Tous les rôles</option>
+                    {% for value, label in roles_choices %}
+                        <option value="{{ value }}" {% if selected_role == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="statut"><i class="fas fa-heart"></i> Statut :</label>
+                <select name="statut" id="statut">
+                    <option value="">Tous les statuts</option>
+                    {% for value, label in statut_choices %}
+                        <option value="{{ value }}" {% if selected_statut == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="show_deletion_pending">
+                    <input type="checkbox" name="show_deletion_pending" id="show_deletion_pending" value="true" {% if show_deletion_pending %}checked{% endif %}>
+                    <i class="fas fa-user-slash"></i> Comptes en supression
+                </label>
+            </div>
+
+            <button type="submit" class="btn-filter">Appliquer les filtres</button>
+            <a href="{% url 'listeUtilisateurs' %}" class="btn-reset">Réinitialiser</a>
+        </form>
+    </section>
+
+    <div class="table-section">
+        <div class="table-container">
+            <table class="manage-table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Email</th>
+                        <th>Rôle</th>
+                        <th>Statut</th>
+                        <th>Suppression</th>
+                        <th class="text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for utilisateur in utilisateurs %}
+                    <tr>
+                        <td>{{ utilisateur.prenom }} {{ utilisateur.nom }}</td>
+                        <td>{{ utilisateur.email }}</td>
+                        <td>
+                            {% if utilisateur.role == "ETU" %}
+                                <span class="badge badge-student">Étudiant</span>
+                            {% elif utilisateur.role == "ANC" %}
+                                <span class="badge badge-alumni">Ancien</span>
+                            {% elif utilisateur.role == "ADM" %}
+                                <span class="badge badge-admin">Admin</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if utilisateur.role in "ETU,ANC" %}
+                                {% if utilisateur.etudiant.statut_compte == "ACTIF" %}
+                                    <span class="status active"><i class="fas fa-check-circle"></i> Actif</span>
+                                {% elif utilisateur.etudiant.statut_compte == "SUSP" %}
+                                    <span class="status suspended"><i class="fas fa-ban"></i> Suspendu</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="status neutral">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if utilisateur.demande_suppression_en_cours %}
+                                <span class="status pending-deletion" title="Demandé le {{ utilisateur.date_demande_suppression|date:'d/m/Y H:i' }}">
+                                    <i class="fas fa-exclamation-circle"></i> En attente depuis {{ utilisateur.date_demande_suppression|date:"d/m/Y" }}
+                                </span>
+                            {% else %}
+                                <span class="status neutral">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right">
+                            <a href="{% url 'afficherProfilUtilisateur' utilisateur.id %}" class="btn btn-sm btn-primary" title="Voir le profil">
+                                <i class="fas fa-user"></i> Profil
+                            </a>
+                            <a href="{% url 'gererComptesEnSuppression' %}" class="btn btn-sm btn-warning" {% if not utilisateur.demande_suppression_en_cours %}style="display:none"{% endif %} title="Voir la page de gestion des suppressions">
+                                <i class="fas fa-cog"></i> Gérer
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">Aucun utilisateur trouvé.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<style>
+.filter-bar {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.filter-group select,
+.filter-group input[type="checkbox"] {
+    padding: 0.5rem;
+}
+
+.filter-group select {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 150px;
+}
+
+.btn-filter, .btn-reset {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.btn-filter {
+    background: #007bff;
+    color: white;
+}
+
+.btn-filter:hover {
+    background: #0056b3;
+}
+
+.btn-reset {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-reset:hover {
+    background: #5a6268;
+}
+
+.status {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.status.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status.suspended {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status.pending-deletion {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status.neutral {
+    color: #999;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.badge-student {
+    background: #e7f3ff;
+    color: #0056b3;
+}
+
+.badge-alumni {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge-admin {
+    background: #d4edda;
+    color: #155724;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: black;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+</style>
+{% endblock %}
+
+   

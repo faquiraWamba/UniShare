@@ -5,11 +5,11 @@
 <main class="dashboard-page">
     <div class="dashboard-header">
         <div>
-            <h1><i class="fas fa-folder-open"></i> Mes Publications</h1>
+            <h1><i class="fas fa-folder-open"></i> Mes Services</h1>
             <p class="subtitle">Gérez vos offres et vos partages sur UniShare</p>
         </div>
         <a href="{% url 'creerService' %}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Créer une publication
+            <i class="fas fa-plus"></i> Créer un service
         </a>
     </div>
 
@@ -19,7 +19,7 @@
                 Mes Services <span class="count-badge">{{ lesservices|length }}</span>
             </a>
             <a href="{% url 'mesAnnonces' %}" class="tab-link">
-                Mes Annonces <span class="count-badge">{{ mesannonces|length }}</span>
+                Mes Annonces <span class="count-badge">{{ lesannonces|length }}</span>
             </a>
         </div>
     </div>
@@ -49,7 +49,10 @@
                                     {% endif %}
                                     <div>
                                         <a href="{% url 'serviceDetail' service.id_service %}" class="title-link">{{ service.titre }}</a>
-                                        <span class="date-sub">Créé le {{ service.date_creation|date:"d/m/Y" }}</span>
+                                            {% if service.is_expired %}
+                                                <span class="expired-label">Expiré</span>
+                                            {% endif %}
+                                            <span class="date-sub">Créé le {{ service.date_creation|date:"d/m/Y" }}</span>
                                     </div>
                                 </div>
                             </td>
@@ -67,6 +70,9 @@
                             <td class="text-right actions-cell">
                                 <a href="{% url 'modifierService' service.id_service %}" class="btn-icon" title="Modifier">
                                     <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'changerStatutService' service.id_service %}" class="btn-icon" title="Changer le statut">
+                                    <i class="fas fa-toggle-on"></i>
                                 </a>
                                 <form method="post" action="{% url 'supprimerService' service.id_service %}" style="display:inline">
                                     {% csrf_token %}

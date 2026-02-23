@@ -1,0 +1,177 @@
+{% extends 'UniShare/base.html' %}
+
+{% block title %}Compte suspendu - UniShare{% endblock %}
+
+{% block content %}
+<div class="suspended-viewport">
+    <main class="suspended-container">
+        <div class="suspended-card-mini">
+            <div class="suspended-icon-wrapper">
+                <i class="fas fa-lock"></i>
+            </div>
+            
+            <div class="suspended-content-top">
+                <span class="badge-alert">Alerte Sécurité</span>
+                <h1>Accès restreint</h1>
+                <p class="user-greet">Bonjour <strong>{{ utilisateur.prenom }} {{ utilisateur.nom }}</strong>,</p>
+            </div>
+
+            <div class="suspended-message">
+                <p>Votre compte <strong>UniShare</strong> fait l'objet d'une suspension suite au non-respect de nos conditions d'utilisation.</p>
+                
+                <div class="restriction-list">
+                    <span><i class="fas fa-times"></i> Publication impossible</span>
+                    <span><i class="fas fa-times"></i> Réservations bloquées</span>
+                </div>
+            </div>
+
+            <div class="suspended-actions">
+                <p class="help-text">Une erreur ? Contactez-nous :</p>
+                <a href="mailto:assistance@unishare.fr" class="btn-primary-unishare">
+                    <i class="fas fa-paper-plane"></i> assistance@unishare.fr
+                </a>
+                <a href="{% url 'connexion' %}" class="link-secondary">Retour à la connexion</a>
+            </div>
+        </div>
+    </main>
+</div>
+<style>
+/* --- Verrouillage du Viewport --- */
+.suspended-viewport {
+    height: calc(100vh - 80px); /* Ajuste selon la taille de ta navbar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow: hidden; /* Empêche le scroll sur cette page */
+}
+
+.suspended-container {
+    width: 100%;
+    max-width: 450px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* --- Carte Compacte --- */
+.suspended-card-mini {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    text-align: center;
+    border: 1px solid #f1f5f9;
+}
+
+.suspended-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    background: #fff1f2;
+    color: #e11d48; /* Rouge charte */
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin: 0 auto 1.2rem;
+}
+
+/* --- Typographie --- */
+.badge-alert {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 800;
+    color: #e11d48;
+    background: #ffe4e6;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.suspended-content-top h1 {
+    font-size: 1.5rem;
+    margin: 1rem 0 0.5rem;
+    color: #0f172a;
+}
+
+.user-greet {
+    font-size: 0.95rem;
+    color: #475569;
+}
+
+.suspended-message {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.restriction-list {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+.restriction-list i {
+    color: #f43f5e;
+    margin-right: 4px;
+}
+
+/* --- Actions --- */
+.suspended-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.help-text {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-bottom: -5px;
+}
+
+.btn-primary-unishare {
+    background: #4f46e5; /* Ta couleur bleu UniShare */
+    color: white !important;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: 0.3s;
+}
+
+.btn-primary-unishare:hover {
+    background: #4338ca;
+    transform: translateY(-2px);
+}
+
+.link-secondary {
+    font-size: 0.8rem;
+    color: #64748b;
+    text-decoration: none;
+}
+
+.link-secondary:hover {
+    text-decoration: underline;
+}
+
+/* --- Animation --- */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Adaptation mobile */
+@media (max-height: 600px) {
+    .suspended-viewport { height: auto; padding: 2rem 0; overflow-y: auto; }
+}
+</style>
+{% endblock %}

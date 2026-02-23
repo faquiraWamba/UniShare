@@ -51,12 +51,11 @@ class RechercheUtilisateurForm(forms.Form):
 
 # Création d'une annonce
 class AnnonceForm(forms.ModelForm):
-    
     class Meta:
         model = Annonce
         fields = ['titre', 'description', 'categorie', 'visibilite','date_expiration', 'photo']
-    widgets = {
-            "date_expiration": forms.DateInput(attrs={"type": "date"})
+        widgets = {
+            "date_expiration": forms.DateInput(attrs={"type": "date", "class": "form-control"})
         }
     
 # Création d'un service
@@ -64,17 +63,15 @@ class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
         fields = ['titre', 'description', 'type_service', 'visibilite','date_expiration','date_rencontre','lieu_rencontre', 'photo']
-    widgets = {
-            "date_expiration": forms.DateField(
-                widget=forms.DateInput(
-                    attrs={
-                        'type': 'date',  
-                        'class': 'form-control'
-                    }
-                ),
-                required=True
-            ),
-            "date_rencontre": forms.DateTimeField(widget=forms.DateTimeInput())
+        widgets = {
+            "date_expiration": forms.DateInput(attrs={
+                'type': 'date',
+                'class': 'form-control'
+            }),
+            "date_rencontre": forms.DateTimeInput(attrs={
+                'type': 'datetime-local',
+                'class': 'form-control'
+            })
         }
 
 # Creer une notification

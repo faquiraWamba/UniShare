@@ -43,7 +43,11 @@
                 {% if request.session.user_id == service.auteur.id %}
                     <h3>Le demandeur</h3>
                     <div class="user-info-mini">
-                        <img src="https://i.pravatar.cc/50?u={{ reservation.demandeur.id }}" class="avatar-round">
+                        {% if reservation.demandeur.photo %}
+                            <img src="{{ reservation.demandeur.photo.url }}" class="avatar-round">
+                        {% else %}
+                            <i class="fas fa-user-circle" style="font-size: 50px; color: #999;"></i>
+                        {% endif %}
                         <div>
                             <h4>{{ reservation.demandeur.prenom }} {{ reservation.demandeur.nom }}</h4>
                             <p>{{ reservation.demandeur.ecole }}</p>
@@ -64,7 +68,11 @@
                 {% else %}
                     <h3>L'hôte</h3>
                     <div class="user-info-mini">
-                        <img src="https://i.pravatar.cc/50?u={{ service.auteur.id }}" class="avatar-round">
+                        {% if service.auteur.photo %}
+                            <img src="{{ service.auteur.photo.url }}" class="avatar-round">
+                        {% else %}
+                            <i class="fas fa-user-circle" style="font-size: 50px; color: #999;"></i>
+                        {% endif %}
                         <div>
                             <h4>{{ service.auteur.prenom }} {{ service.auteur.nom }}</h4>
                             <p>{{ service.auteur.ecole }}</p>

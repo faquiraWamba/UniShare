@@ -16,7 +16,7 @@
     <div class="tabs-container">
         <div class="tabs">
             <a href="{% url 'mesServices' %}" class="tab-link">
-                Mes Services <span class="count-badge">{{ lesservices_count }}</span>
+                Mes Services <span class="count-badge">{{ lesservices|length }}</span>
             </a>
             <a href="{% url 'mesAnnonces' %}" class="tab-link active">
                 Mes Annonces <span class="count-badge">{{ lesannonces|length }}</span>
@@ -65,6 +65,9 @@
                             </td>
                             <td>
                                 <span class="date-expire {% if annonce.is_expired %}expired{% endif %}">
+                                    {% if annonce.is_expired %}
+                                        <strong>Expiré</strong>
+                                    {% endif %}
                                     {{ annonce.date_expiration|date:"d/m/Y"|default:"Permanente" }}
                                 </span>
                             </td>

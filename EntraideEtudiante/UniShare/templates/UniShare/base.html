@@ -15,16 +15,22 @@
         </div>
 
         <nav>
-            <a href="/" class="nav-link">Accueil</a>
             {% if request.session.user_role == "ETU" or request.session.user_role == "ANC" %}
-                <a href="{% url 'listeServices' %}" class="nav-link">Annonces & Services</a> 
                 <a href="{% url 'mesAnnonces' %}" class="nav-link">Mes Annonces</a> 
+            {% endif %}
+            {% if not request.session.user_role %}
+                <a href="/" class="nav-link">Accueil</a>
+            {% endif %}
+            {% if request.session.user_role == "ETU"%}
+                <a href="{% url 'listeAnnonces' %}" class="nav-link">Annonces & Services</a> 
                 <a href="{% url 'mesReservations' %}" class="nav-link">Réservations</a>
             {% endif %}
             
             {% if request.session.user_role == "ADM" %}
                 <a href="{% url 'dashboardAdmin' %}" class="nav-link">Dashboard</a>
                 <a href="{% url 'listeUtilisateurs' %}" class="nav-link">Utilisateurs</a>
+                <a href="{% url 'listeAnnoncesAdmin' %}" class="nav-link">Annonces</a>
+                <a href="{% url 'listeServicesAdmin' %}" class="nav-link">Services</a>
             {% endif %}
 
             <div class="auth-buttons">
@@ -34,24 +40,19 @@
                          {% if nb_notif > 0 %}
                             <span class="notif-badge">{{ nb_notif }}</span>
                         {% endif %}
-                        {% if nb_notif > 0 %}
-                            <span class="notif-badge">{{ nb_notif }}</span>
-                        {% endif %}
                     </a>
 
                     <div class="user-profile-nav">
-                        {% if request.session.user_photo %}
-                            <img src="{{ request.session.user_photo }}" alt="Profil" class="nav-avatar">
-                        {% else %}
-                            <i class="fas fa-user-circle nav-avatar-icon"></i>
-                        {% endif %}
-                        <span class="nav-username">{{ request.session.user_prenom }}</span>
-                        <a href="{% url 'mesNotifications' %}" class="notif-link" title="Notifications">
-                            <i class="fas fa-bell"></i>
-                            {% if nb_notif and nb_notif > 0 %}
-                                <span class="notif-badge">{{ nb_notif }}</span>
+                        <a href="{% url 'profil' %}" title="Mon profil">
+                            {% if request.session.user_photo %}
+                                <img src="{{ request.session.user_photo }}" alt="Profil" class="nav-avatar">
+                            {% else %}
+                                <i class="fas fa-user-circle nav-avatar-icon"></i>
+
                             {% endif %}
                         </a>
+                        <span class="nav-username">{{ request.session.user_prenom }}</span>
+                        
                         <a href="{% url 'deconnexion' %}" class="logout-icon btn-logout confirm-action" data-confirm="Voulez-vous vraiment vous déconnecter ?" title="Déconnexion">
                             <i class="fas fa-power-off"></i>
                         </a>

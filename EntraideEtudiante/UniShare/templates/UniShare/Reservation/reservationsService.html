@@ -9,7 +9,7 @@
             <p class="subtitle">Demandes pour le service : <strong>{{ service.titre }}</strong></p>
         </div>
         <a href="{% url 'serviceDetail' service.id_service %}" class="btn-nav outline">
-            <i class="fas fa-eye"></i> Voir le service
+            <i class="fas fa-arrow-left"></i> retour au service
         </a>
     </div>
 
@@ -21,11 +21,16 @@
                     
                     <div class="res-card-body">
                         <div class="user-profile-summary">
-                            <img src="https://i.pravatar.cc/80?u={{ reservation.demandeur.id }}" alt="Avatar" class="res-avatar">
+                            {% if reservation.demandeur.photo %}
+                                <img src="{{ reservation.demandeur.photo.url }}" alt="Avatar" class="res-avatar">
+                            {% else %}
+                                <i class="fas fa-user-circle" style="font-size: 80px; color: #999;"></i>
+                            {% endif %}
                             <div class="user-details">
                                 <h3>{{ reservation.demandeur.prenom }} {{ reservation.demandeur.nom }}</h3>
                                 <p class="user-school"><i class="fas fa-university"></i> {{ reservation.demandeur.ecole }}</p>
-                                <span class="badge-niveau">{{ reservation.demandeur.get_niveau_display }}</span>
+                                <small style="display: block; color: #666;">{{ reservation.demandeur.get_niveau_display }} • {{ reservation.demandeur.formation }}</small>
+                                <span class="badge-niveau">Promotion: {{ reservation.demandeur.promo }}</span>
                             </div>
                             <div class="status-badge-zone">
                                 <span class="status-pill {{ reservation.statut|lower }}">
@@ -36,22 +41,32 @@
 
                         <div class="res-info-list">
                             <div class="info-item">
-                                <i class="fas fa-envelope"></i>
-                                <span>{{ reservation.demandeur.email }}</span>
-                            </div>
-                            <div class="info-item">
                                 <i class="fas fa-clock"></i>
                                 <span>Demande reçue le {{ reservation.date_creation|date:"d M Y à H:i" }}</span>
                             </div>
                         </div>
 
                         <div class="res-card-actions">
-                            <a href="{% url 'detailReservation' reservation.id_reservation %}" class="btn-manage">
-                                <i class="fas fa-cog"></i> Gérer la demande
-                            </a>
-                            <a href="mailto:{{ reservation.demandeur.email }}" class="btn-icon-only" title="Envoyer un mail">
-                                <i class="fas fa-paper-plane"></i>
-                            </a>
+                            <form method="POST" action="{% url 'accepterReservation' reservation.id_reservation %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-action" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                                    <i class="fas fa-check"></i> Accepter
+                                </button>
+                            </form>
+                            <form method="POST" action="{% url 'refuserReservation' reservation.id_reservation %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-action-danger" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background-color: #dc3545; color: white;">
+                                    <i class="fas fa-times"></i> Refuser
+                                </button>
+                            </form>
+                            {% if reservation.statut == "ATT" and reservations_en_attente > 1 %}
+                            <form method="POST" action="{% url 'accepterEtRefuserAutres' reservation.id_reservation %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-action-secondary" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background-color: #6c757d; color: white;" title="Accepter cette demande et refuser toutes les autres">
+                                    <i class="fas fa-check-double"></i> Accepter et refuser les autres
+                                </button>
+                            </form>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

@@ -1,25 +1,210 @@
 {% extends "UniShare/base.html" %}
 
 {% block content %}
-    <h1>Tableau de bord administrateur</h1>
-    <p>Bienvenue sur votre tableau de bord, {{ request.session.user_name }} !</p>
-
-    <div>
-        <h2>Statistiques clés</h2>
-        <ul>
-            <li><strong>Nombre total d'utilisateurs :</strong> {{ stats.total_utilisateurs }}</li>
-            <li><strong>Nombre total d'annonces :</strong> {{ stats.total_annonces }}</li>
-            <li><strong>Nombre total de services :</strong> {{ stats.total_services }}</li>
-        </ul>
+<main class="dashboard-page">
+    <div class="page-header">
+        <div class="header-titles">
+            <h1><i class="fas fa-chart-bar"></i> Tableau de bord administrateur</h1>
+            <p class="subtitle">Bienvenue, {{ request.session.user_prenom }} !</p>
+        </div>
     </div>
 
-    <div>
-        <h2>Actions rapides</h2>
-        <ul>
-            <li><a href="{% url 'listeUtilisateurs' %}">Gérer les utilisateurs</a></li>
-            <li><a href="{% url 'listeAnnonces' %}">Gérer les annonces</a></li>
-            <li><a href="{% url 'listeServices' %}">Gérer les services</a></li>
-        </ul>
+    <!-- Cards Statistiques -->
+    <div class="stats-cards-grid">
+        <!-- Card Utilisateurs -->
+        <div class="stats-card large">
+            <div class="card-header">
+                <h2><i class="fas fa-users"></i> Utilisateurs</h2>
+            </div>
+            <div class="card-content">
+                <div class="stat-item">
+                    <span class="stat-label">Total :</span>
+                    <span class="stat-value">{{ nb_utilisateurs }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Étudiants :</span>
+                    <span class="stat-value">{{ nb_etudiants }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Admins :</span>
+                    <span class="stat-value">{{ nb_admins }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Anciens :</span>
+                    <span class="stat-value">{{ nb_anciens }}</span>
+                </div>
+                <div class="stat-item highlight">
+                    <span class="stat-label">Comptes actifs :</span>
+                    <span class="stat-value">{{ nb_comptes_actifs }}</span>
+                </div>
+                <div class="stat-item warning">
+                    <span class="stat-label">Comptes suspendus :</span>
+                    <span class="stat-value">{{ nb_comptes_suspendus }}</span>
+                </div>
+                {% if nb_comptes_suppression_pending > 0 %}
+                <div class="stat-item danger">
+                    <span class="stat-label">En attente de suppression :</span>
+                    <span class="stat-value">{{ nb_comptes_suppression_pending }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Card Annonces & Services -->
+        <div class="stats-card large">
+            <div class="card-header">
+                <h2><i class="fas fa-file-alt"></i> Annonces & Services</h2>
+            </div>
+            <div class="card-content">
+                <div class="stat-item">
+                    <span class="stat-label">Annonces :</span>
+                    <span class="stat-value">{{ nb_annonces }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Services :</span>
+                    <span class="stat-value">{{ nb_services }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Total :</span>
+                    <span class="stat-value">{{ nb_annonces|add:nb_services }}</span>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <!-- Actions rapides -->
+    <div class="actions-section">
+        <h2><i class="fas fa-lightning-bolt"></i> Actions rapides</h2>
+        <div class="action-buttons">
+            <a href="{% url 'listeAnnoncesAdmin' %}" class="btn btn-primary">
+                <i class="fas fa-bullhorn"></i> Gérer les annonces ({{ nb_annonces }})
+            </a>
+            <a href="{% url 'listeServicesAdmin' %}" class="btn btn-primary">
+                <i class="fas fa-tools"></i> Gérer les services ({{ nb_services }})
+            </a>
+            <a href="{% url 'gererAnnoncesExpirees' %}" class="btn btn-secondary">
+                <i class="fas fa-trash-alt"></i> Gérer les annonces/services expirés
+            </a>
+            <a href="{% url 'listeUtilisateurs' %}" class="btn btn-secondary">
+                <i class="fas fa-users-cog"></i> Gérer les utilisateurs
+            </a>
+            {% if nb_comptes_suppression_pending > 0 %}
+            <a href="{% url 'gererComptesEnSuppression' %}" class="btn btn-danger">
+                <i class="fas fa-user-slash"></i> Gérer les comptes en suppression ({{ nb_comptes_suppression_pending }})
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+</main>
+
+<style>
+.stats-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 2rem;
+}
+
+.card-header {
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.card-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.3rem;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+.stat-item.highlight {
+    background: #d4edda;
+}
+
+.stat-item.warning {
+    background: #fff3cd;
+}
+
+.stat-item.danger {
+    background: #f8d7da;
+}
+
+.stat-label {
+    font-weight: 500;
+    color: #555;
+}
+
+.stat-value {
+    font-weight: bold;
+    color: #007bff;
+    font-size: 1.1rem;
+}
+
+.actions-section {
+    margin-top: 3rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+}
+</style>
 {% endblock %}
