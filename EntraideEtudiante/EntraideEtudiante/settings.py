@@ -112,7 +112,11 @@ USE_I18N = True
 
 USE_TZ = True
 
-
+#Link to trusted origins for CSRF protection
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost:8000'
+]
+    
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 

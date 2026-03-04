@@ -7,7 +7,9 @@
     <div class="container-detail">
         <div class="detail-main">
             <nav class="breadcrumb">
-                <a href="{% url 'mesReservations' %}">Réservations</a> / <span>Détail demande</span>
+                <button class="link-back" onclick="history.back()">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </button>
             </nav>
 
             <section class="reservation-header-card">
@@ -93,8 +95,8 @@
                     <i class="fas fa-arrow-left"></i> Retour aux réservations
                 </a>
             {% else %}
-                <a href="{% url 'mesReservations' %}" class="link-back">
-                    <i class="fas fa-arrow-left"></i> Mes demandes
+                <a href="{% url 'serviceDetail' service.id_service %}" class="link-back">
+                    <i class="fas fa-eye"></i> Voir le service
                 </a>
             {% endif %}
         </aside>

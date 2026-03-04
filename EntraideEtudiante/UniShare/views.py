@@ -5,6 +5,7 @@ from .utils import verifier_connexion, verifier_etudiant, verifier_proprietaire,
 from django.utils import timezone
 from .forms import ConnexionForm, UtilisateurForm, RechercheUtilisateurForm,EtudiantForm,AnnonceForm ,ServiceForm,NotificationForm
 from .models import Utilisateur,Etudiant,Annonce,Service, Reservation, Notification
+from django.db.models import Q
 
 def accueil(request):
     # Si l'utilisateur est connecté, le rediriger selon son rôle
@@ -273,7 +274,7 @@ def listeAnnonces(request):
     annonces = annonces.filter(auteur__statut_compte=Etudiant.StatutCompte.ACTIF)
 
     # Appliquer les filtres de visibilité selon le profil de l'étudiant
-    from django.db.models import Q
+    
     visibilite_filter = Q(visibilite='PUBLIC') | \
                        Q(visibilite='ECOLE', auteur__ecole=etudiant.ecole) | \
                        Q(visibilite='PROMO', auteur__ecole=etudiant.ecole, auteur__promo=etudiant.promo)
@@ -292,7 +293,7 @@ def listeAnnonces(request):
     # Filtrer par visibilité
     if visibilite and visibilite != 'TOUS':
         annonces = annonces.filter(visibilite=visibilite)
-    from django.db.models import Q
+    
     # Filtrer par date d'expiration
     if not afficher_expirees:
         # Afficher seulement les annonces non expirées (sans date expiration ou date future)
@@ -355,7 +356,7 @@ def mesAnnonces(request):
     auteur = Etudiant.objects.get(id=user_id)
 
     # Exclure les services (qui héritent de Annonce) et ne pas afficher les annonces expirées
-    from django.db.models import Q
+    
     annonces = Annonce.objects.filter(auteur=auteur, service__isnull=True)
     annonces = annonces.filter(Q(date_expiration__isnull=True) | Q(date_expiration__gte=timezone.now()))
     # Récupérer aussi les services de l'utilisateur pour afficher le compteur
@@ -455,7 +456,8 @@ def notificationSuppression(request, id):
         notification = Notification.objects.create(
             titre=titre,
             message=message,
-            type_notification=type_notification
+            type_notification=type_notification,
+            annonce=objet
         )
         
         # Si c'est un Service, supprimer les réservations et notifier les demandeurs
@@ -466,7 +468,8 @@ def notificationSuppression(request, id):
                 notif = Notification.objects.create(
                     titre=titre,
                     message=message,
-                    type_notification=type_notification
+                    type_notification=type_notification,
+                    reservation=reservation
                 )
                 reservation.delete()
         
@@ -539,7 +542,7 @@ def listeServices(request):
     services = services.filter(auteur__statut_compte=Etudiant.StatutCompte.ACTIF)
 
     # Appliquer les filtres de visibilité selon le profil de l'étudiant
-    from django.db.models import Q
+    
     visibilite_filter = Q(visibilite='PUBLIC') | \
                        Q(visibilite='ECOLE', auteur__ecole=etudiant.ecole) | \
                        Q(visibilite='PROMO', auteur__ecole=etudiant.ecole, auteur__promo=etudiant.promo)
@@ -920,6 +923,7 @@ def accepterEtRefuserAutres(request, id_reservation):
         autre_res.save()
         
         Notification.objects.create(
+            titre=f"Réservation refusée : {service.titre}",
             reservation=autre_res,
             message=f"Votre réservation pour le service '{service.titre}' a été refusée.",
             type_notification=Notification.TypeNotification.RESERVATION
@@ -943,7 +947,7 @@ def listeAnnoncesAdmin(request):
     afficher_expirees = request.GET.get('afficher_expirees', 'false').lower() == 'true'
     sort_by = request.GET.get('sort', '-date_creation')
 
-    from django.db.models import Q
+    
     
     # Filtrer par catégorie
     if categorie and categorie != 'TOUS':
@@ -1002,7 +1006,7 @@ def listeServicesAdmin(request):
     afficher_expirees = request.GET.get('afficher_expirees', 'false').lower() == 'true'
     sort_by = request.GET.get('sort', '-date_creation')
 
-    from django.db.models import Q
+    
     
     # Filtrer par type de service
     if type_service and type_service != 'TOUS':
@@ -1263,15 +1267,18 @@ def mesNotifications(request):
     user_id = request.session['user_id']
     etudiant = Etudiant.objects.get(id=user_id)
 
-    notifications = Notification.objects.filter(reservation__demandeur=etudiant or ).order_by('-date')
-
+    if etudiant.role == "ETU":
+        notifications = Notification.objects.filter(Q(reservation__demandeur=etudiant) | Q(annonce__auteur=etudiant)).order_by('-date')
+    elif etudiant.role == "ANC":
+        notifications = Notification.objects.filter(annonce__auteur=etudiant).order_by('-date')
+        
     return render(request, "UniShare/Notification/mesNotifications.html", {
         "lesnotifications": notifications
     })
 
 
-""" Créer une notification (lors de la suppression d'une réservation par admin)"""
-def creerNotification(request,titre,message, type_notification):
+""" Créer une notification (lors de la suppression d'une annonce par admin)"""
+def creerNotification(request,titre,message, type_notification,annonce):
     if 'user_id' not in request.session:
         return HttpResponseRedirect(reverse("connexion"))
 
@@ -1280,7 +1287,8 @@ def creerNotification(request,titre,message, type_notification):
         notification = Notification.objects.create(
             titre=titre,
             message=message,
-            type_notification=type_notification
+            type_notification=type_notification,
+            annonce=annonce
         )
         notification.save()
         return HttpResponseRedirect(reverse("listerNotifications"))
@@ -1309,8 +1317,11 @@ def marquerToutesNotificationsCommeLues(request):
 
     user_id = request.session['user_id']
     etudiant = Etudiant.objects.get(id=user_id)
-
-    notifications = Notification.objects.filter(reservation__demandeur=etudiant, lue=False)
-    notifications.update(lue=True)
+    if etudiant.role == "ETU":
+        notifications = Notification.objects.filter((Q(reservation__demandeur=etudiant) | Q(annonce__auteur=etudiant)) & Q(lu=False)).order_by('-date')    
+    elif etudiant.role == "ANC":
+        notifications = Notification.objects.filter(annonce__auteur=etudiant, lu=False).order_by('-date')
+      
+    notifications.update(lu=True)
 
     return HttpResponseRedirect(reverse("mesNotifications"))

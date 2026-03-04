@@ -6,14 +6,11 @@
     <div class="container-detail">
         <div class="detail-main">
             <nav class="breadcrumb">
-                {% if is_admin %}
-                    <a href="{% url 'listeAnnoncesAdmin' %}">Toutes les Annonces</a> / <span>{{ annonce.titre }}</span>
-                {% elif annonce.auteur.id == request.session.user_id %}
-                    <a href="{% url 'mesAnnonces' %}">Mes Annonces</a> / <span>{{ annonce.titre }}</span>
-                {% else %}
-                    <a href="{% url 'listeAnnonces' %}">Annonces</a> / <span>{{ annonce.titre }}</span>
-                {% endif %}
+                <button class="link-back" onclick="history.back()">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </button>
             </nav>
+            
 
             <section class="detail-card">
                 {% if annonce.photo %}
@@ -108,6 +105,10 @@
             {% if is_admin %}
                 <a href="{% url 'listeAnnoncesAdmin' %}" class="link-back">
                     <i class="fas fa-arrow-left"></i> Retour aux annonces
+                </a>
+            {% elif annonce.auteur.id == request.session.user_id %}
+                <a href="{% url 'mesAnnonces' %}" class="link-back">
+                    <i class="fas fa-arrow-left"></i> Retour à mes annonces
                 </a>
             {% else %}
                 <a href="{% url 'listeAnnonces' %}" class="link-back">

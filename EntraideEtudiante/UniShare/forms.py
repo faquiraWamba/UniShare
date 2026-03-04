@@ -19,13 +19,13 @@ class UtilisateurForm(forms.ModelForm):
 
     class Meta:
         model = Utilisateur
-        fields = [
-            "nom",
-            "prenom",
-            "email",
-            "mot_de_passe",
-            "role",
-            "photo"
+        fields = ['nom', 'prenom', 'email', 'mot_de_passe', 'role', 'photo']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Exclure le rôle 'ADM'
+        self.fields['role'].choices = [
+            (key, label) for key, label in self.fields['role'].choices if key != 'ADM'
         ]
 
 
