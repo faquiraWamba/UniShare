@@ -4,7 +4,7 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = 'empty-project-type'
-recent_files = ['..\\..\\..\\..\\.spyder-py3\\temp.py', 'EntraideEtudiante\\settings.py', 'EntraideEtudiante\\urls.py', 'UniShare\\views.py', 'UniShare\\models.py', 'UniShare\\admin.py', 'UniShare\\templates\\UniShare\\base.html', 'UniShare\\templates\\UniShare\\accueil.html', 'UniShare\\forms.py', 'UniShare\\templates\\UniShare\\Authentification\\connexion.html', 'UniShare\\templates\\UniShare\\Authentification\\creation_compte.html']
+recent_files = ['EntraideEtudiante\\urls.py', 'UniShare\\views.py', 'UniShare\\templates\\UniShare\\Annonce\\listeAnnonces.html', 'UniShare\\templates\\UniShare\\Annonce\\annonceDetail.html', 'UniShare\\templates\\UniShare\\Annonce\\mesAnnonces.html', 'UniShare\\templates\\UniShare\\Annonce\\creerAnnonce.html', 'UniShare\\forms.py', 'UniShare\\models.py', 'UniShare\\templates\\UniShare\\Annonce\\modifierAnnonce.html', 'UniShare\\templates\\UniShare\\Service\\serviceDetail.html', 'UniShare\\templates\\UniShare\\Service\\listeServices.html', 'UniShare\\templates\\UniShare\\Service\\mesServices.html', 'UniShare\\templates\\UniShare\\Service\\modifierService.html', 'UniShare\\templates\\UniShare\\Service\\creerService.html', 'UniShare\\templates\\UniShare\\base.html', 'UniShare\\templates\\UniShare\\Authentification\\creation_compte.html', 'UniShare\\utils.py', 'UniShare\\templates\\UniShare\\Notification\\mesNotifications.html', 'UniShare\\static\\css\\style.css', 'UniShare\\templates\\UniShare\\Administrateur\\gererAnnoncesExpirees.html']
 
 [main]
 version = 0.2.0

@@ -5,8 +5,10 @@ from .utils import verifier_connexion, verifier_etudiant, verifier_proprietaire,
 from django.utils import timezone
 from .forms import ConnexionForm, UtilisateurForm, RechercheUtilisateurForm,EtudiantForm,AnnonceForm ,ServiceForm,NotificationForm
 from .models import Utilisateur,Etudiant,Annonce,Service, Reservation, Notification
+from django.db.models import Q
 
 def accueil(request):
+    
     # Si l'utilisateur est connecté, le rediriger selon son rôle
     if 'user_id' in request.session:
         user_role = request.session.get('user_role')
@@ -19,6 +21,7 @@ def accueil(request):
             return HttpResponseRedirect(reverse("listeAnnonces"))
     
     return render(request, 'UniShare/accueil.html')
+
 
 """
     Actions d'authentification
@@ -33,7 +36,7 @@ def creerCompte(request):
             utilisateur = user_form.save(commit=False)
             
             # Si l'utilisateur est étudiant, on ajoute les infos étudiant
-            if utilisateur.role == "ETU":
+            if utilisateur.role == "ETU" or utilisateur.role == "ANC":
                 if etu_form.is_valid():
                     Etudiant.objects.create(
                         id=utilisateur.id,
@@ -102,7 +105,8 @@ def deconnexion(request):
     if 'user_id' in request.session:
         del request.session['user_id']
         del request.session['user_email']
-        del request.session['user_photo']
+        if 'user_photo' in request.session:
+            del request.session['user_photo']
         if 'user_role' in request.session:
             del request.session['user_role']
     return HttpResponseRedirect(reverse("accueil"))
@@ -273,7 +277,6 @@ def listeAnnonces(request):
     annonces = annonces.filter(auteur__statut_compte=Etudiant.StatutCompte.ACTIF)
 
     # Appliquer les filtres de visibilité selon le profil de l'étudiant
-    from django.db.models import Q
     visibilite_filter = Q(visibilite='PUBLIC') | \
                        Q(visibilite='ECOLE', auteur__ecole=etudiant.ecole) | \
                        Q(visibilite='PROMO', auteur__ecole=etudiant.ecole, auteur__promo=etudiant.promo)
@@ -292,7 +295,7 @@ def listeAnnonces(request):
     # Filtrer par visibilité
     if visibilite and visibilite != 'TOUS':
         annonces = annonces.filter(visibilite=visibilite)
-    from django.db.models import Q
+
     # Filtrer par date d'expiration
     if not afficher_expirees:
         # Afficher seulement les annonces non expirées (sans date expiration ou date future)
@@ -355,7 +358,6 @@ def mesAnnonces(request):
     auteur = Etudiant.objects.get(id=user_id)
 
     # Exclure les services (qui héritent de Annonce) et ne pas afficher les annonces expirées
-    from django.db.models import Q
     annonces = Annonce.objects.filter(auteur=auteur, service__isnull=True)
     annonces = annonces.filter(Q(date_expiration__isnull=True) | Q(date_expiration__gte=timezone.now()))
     # Récupérer aussi les services de l'utilisateur pour afficher le compteur
@@ -539,7 +541,6 @@ def listeServices(request):
     services = services.filter(auteur__statut_compte=Etudiant.StatutCompte.ACTIF)
 
     # Appliquer les filtres de visibilité selon le profil de l'étudiant
-    from django.db.models import Q
     visibilite_filter = Q(visibilite='PUBLIC') | \
                        Q(visibilite='ECOLE', auteur__ecole=etudiant.ecole) | \
                        Q(visibilite='PROMO', auteur__ecole=etudiant.ecole, auteur__promo=etudiant.promo)
@@ -927,7 +928,6 @@ def listeAnnoncesAdmin(request):
     afficher_expirees = request.GET.get('afficher_expirees', 'false').lower() == 'true'
     sort_by = request.GET.get('sort', '-date_creation')
 
-    from django.db.models import Q
     
     # Filtrer par catégorie
     if categorie and categorie != 'TOUS':
@@ -986,7 +986,6 @@ def listeServicesAdmin(request):
     afficher_expirees = request.GET.get('afficher_expirees', 'false').lower() == 'true'
     sort_by = request.GET.get('sort', '-date_creation')
 
-    from django.db.models import Q
     
     # Filtrer par type de service
     if type_service and type_service != 'TOUS':
@@ -1279,7 +1278,7 @@ def marquerNotificationCommeLue(request, id):
         return HttpResponseRedirect(reverse("connexion"))
 
     notification = Notification.objects.get(id=id)
-    notification.lue = True
+    notification.lu = True
     notification.save()
 
     return HttpResponseRedirect(reverse("mesNotifications"))
@@ -1292,7 +1291,7 @@ def marquerToutesNotificationsCommeLues(request):
     user_id = request.session['user_id']
     etudiant = Etudiant.objects.get(id=user_id)
 
-    notifications = Notification.objects.filter(reservation__demandeur=etudiant, lue=False)
-    notifications.update(lue=True)
+    notifications = Notification.objects.filter(reservation__demandeur=etudiant, lu=False)
+    notifications.update(lu=True)
 
     return HttpResponseRedirect(reverse("mesNotifications"))

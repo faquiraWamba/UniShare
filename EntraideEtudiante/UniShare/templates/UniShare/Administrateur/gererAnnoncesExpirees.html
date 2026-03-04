@@ -1,104 +1,211 @@
 {% extends "UniShare/base.html" %}
 
 {% block content %}
-    <h1>Gestion des annonces et services expirés</h1>
+<div class="admin-management-container">
+    <div class="page-header">
+        <h1><i class="fas fa-history"></i> Gestion des éléments expirés</h1>
+        <p class="subtitle">Nettoyez la base de données en supprimant les contenus obsolètes.</p>
+    </div>
 
     <form method="post">
         {% csrf_token %}
         
-        <div style="margin-bottom: 20px;">
-            <button type="submit" name="action" value="supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer les éléments sélectionnés ?')">
-                Supprimer les éléments sélectionnés
+        <div class="action-bar top">
+            <button type="submit" name="action" value="supprimer" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir supprimer définitivement les éléments sélectionnés ?')">
+                <i class="fas fa-trash-alt"></i> Supprimer la sélection
             </button>
         </div>
 
-        <!-- Annonces expirées -->
-        {% if annonces_expirees %}
-        <div style="margin-bottom: 30px;">
-            <h2>Annonces expirées ({{ annonces_expirees.count }})</h2>
-            <table border="1" cellpadding="10">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="selectAllAnnonces" onclick="selectAllAnnonces(this)"></th>
-                        <th>Titre</th>
-                        <th>Auteur</th>
-                        <th>Catégorie</th>
-                        <th>Date de création</th>
-                        <th>Date d'expiration</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for annonce in annonces_expirees %}
-                    <tr>
-                        <td><input type="checkbox" name="annonce_ids[]" value="{{ annonce.id_annonce }}" class="annonce-checkbox"></td>
-                        <td>{{ annonce.titre }}</td>
-                        <td>{{ annonce.auteur.prenom }} {{ annonce.auteur.nom }}</td>
-                        <td>{{ annonce.get_categorie_display }}</td>
-                        <td>{{ annonce.date_creation }}</td>
-                        <td>{{ annonce.date_expiration }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <p><em>Aucune annonce expirée.</em></p>
-        {% endif %}
+        <section class="management-section">
+            <h2><i class="fas fa-bullhorn"></i> Annonces expirées ({{ annonces_expirees.count }})</h2>
+            {% if annonces_expirees %}
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAllAnnonces" onclick="selectAllAnnonces(this)"></th>
+                            <th>Titre</th>
+                            <th>Auteur</th>
+                            <th>Catégorie</th>
+                            <th>Création</th>
+                            <th>Expiration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for annonce in annonces_expirees %}
+                        <tr>
+                            <td><input type="checkbox" name="annonce_ids[]" value="{{ annonce.id_annonce }}" class="annonce-checkbox"></td>
+                            <td class="font-weight-bold">{{ annonce.titre }}</td>
+                            <td>{{ annonce.auteur.prenom }} {{ annonce.auteur.nom }}</td>
+                            <td><span class="badge badge-info">{{ annonce.get_categorie_display }}</span></td>
+                            <td>{{ annonce.date_creation|date:"d/m/Y" }}</td>
+                            <td class="text-danger">{{ annonce.date_expiration|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state-mini">Aucune annonce expirée.</div>
+            {% endif %}
+        </section>
 
-        <!-- Services expirés -->
-        {% if services_expires %}
-        <div style="margin-bottom: 30px;">
-            <h2>Services expirés ({{ services_expires.count }})</h2>
-            <table border="1" cellpadding="10">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="selectAllServices" onclick="selectAllServices(this)"></th>
-                        <th>Titre</th>
-                        <th>Auteur</th>
-                        <th>Type</th>
-                        <th>Statut</th>
-                        <th>Date de création</th>
-                        <th>Date d'expiration</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for service in services_expires %}
-                    <tr>
-                        <td><input type="checkbox" name="service_ids[]" value="{{ service.id_service }}" class="service-checkbox"></td>
-                        <td>{{ service.titre }}</td>
-                        <td>{{ service.auteur.prenom }} {{ service.auteur.nom }}</td>
-                        <td>{{ service.get_type_service_display }}</td>
-                        <td>{{ service.get_statut_display }}</td>
-                        <td>{{ service.date_creation }}</td>
-                        <td>{{ service.date_expiration }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% else %}
-        <p><em>Aucun service expiré.</em></p>
-        {% endif %}
+        <section class="management-section">
+            <h2><i class="fas fa-handshake"></i> Services expirés ({{ services_expires.count }})</h2>
+            {% if services_expires %}
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAllServices" onclick="selectAllServices(this)"></th>
+                            <th>Titre</th>
+                            <th>Auteur</th>
+                            <th>Type</th>
+                            <th>Statut</th>
+                            <th>Création</th>
+                            <th>Expiration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for service in services_expires %}
+                        <tr>
+                            <td><input type="checkbox" name="service_ids[]" value="{{ service.id_service }}" class="service-checkbox"></td>
+                            <td class="font-weight-bold">{{ service.titre }}</td>
+                            <td>{{ service.auteur.prenom }} {{ service.auteur.nom }}</td>
+                            <td><span class="badge badge-secondary">{{ service.get_type_service_display }}</span></td>
+                            <td>{{ service.get_statut_display }}</td>
+                            <td>{{ service.date_creation|date:"d/m/Y" }}</td>
+                            <td class="text-danger">{{ service.date_expiration|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state-mini">Aucun service expiré.</div>
+            {% endif %}
+        </section>
 
-        <div style="margin-top: 20px;">
-            <button type="submit" name="action" value="supprimer" onclick="return confirm('Êtes-vous sûr de vouloir supprimer les éléments sélectionnés ?')">
-                Supprimer les éléments sélectionnés
+        <div class="action-bar bottom">
+             <button type="submit" name="action" value="supprimer" class="btn btn-danger">
+                <i class="fas fa-trash-alt"></i> Supprimer la sélection
             </button>
+            <a href="{% url 'dashboardAdmin' %}" class="btn btn-outline">Retour au tableau de bord</a>
         </div>
     </form>
+</div>
+<style>
+.admin-management-container {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-    <script>
-        function selectAllAnnonces(checkbox) {
-            const annonces = document.querySelectorAll('.annonce-checkbox');
-            annonces.forEach(item => item.checked = checkbox.checked);
-        }
+.page-header {
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #edf2f7;
+    padding-bottom: 1rem;
+}
 
-        function selectAllServices(checkbox) {
-            const services = document.querySelectorAll('.service-checkbox');
-            services.forEach(item => item.checked = checkbox.checked);
-        }
-    </script>
+.page-header h1 { color: #2d3748; margin-bottom: 0.5rem; }
+.subtitle { color: #718096; font-size: 1.1rem; }
 
-    <p><a href="{% url 'dashboardAdmin' %}">Retour au tableau de bord</a></p>
+.management-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+    border: 1px solid #e2e8f0;
+}
 
+.management-section h2 {
+    font-size: 1.3rem;
+    color: #4a5568;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Style de la table */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+
+.admin-table th {
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 2px solid #edf2f7;
+}
+
+.admin-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #edf2f7;
+    color: #4a5568;
+    font-size: 0.9rem;
+}
+
+.admin-table tr:hover { background-color: #f1f5f9; }
+
+/* Badges et Textes */
+.badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.badge-info { background: #e0f2fe; color: #0369a1; }
+.badge-secondary { background: #f1f5f9; color: #475569; }
+.text-danger { color: #e53e3e; font-weight: 600; }
+.font-weight-bold { font-weight: 600; color: #2d3748; }
+
+/* Boutons */
+.action-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-danger { background: #e53e3e; color: white; }
+.btn-danger:hover { background: #c53030; }
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #cbd5e0;
+    color: #4a5568;
+}
+.btn-outline:hover { background: #f7fafc; }
+
+.empty-state-mini {
+    padding: 2rem;
+    text-align: center;
+    background: #f8fafc;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-style: italic;
+}
+</style>
 {% endblock %}

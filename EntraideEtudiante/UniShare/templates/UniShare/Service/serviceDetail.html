@@ -125,7 +125,11 @@
                 {% endif %}
                 
                 <hr>
-                {% if is_admin %}
+                {% if annonce.auteur.id == request.session.user_id %}
+                    <a href="{% url 'mesServices' %}" class="link-back">
+                        <i class="fas fa-arrow-left"></i> Retour aux services
+                    </a>
+                {% elif is_admin %}
                     <a href="{% url 'listeServicesAdmin' %}" class="link-back">
                         <i class="fas fa-arrow-left"></i> Retour aux services
                     </a>

@@ -1286,6 +1286,7 @@ select[name="statut"] {
         gap: 1rem;
     }
 }
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .tracker-card {
