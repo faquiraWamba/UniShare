@@ -124,6 +124,7 @@ class Notification(models.Model):
     class TypeNotification(models.TextChoices):
         RESERVATION = "RESERVATION", "Notification de réservation"
         ANNONCE = "ANNONCE", "Notification d'annonce"
+        RESERVATION_AUTEUR = "RESERVATION_AUTEUR", "Notification pour l'auteur du service"
         
     id_notif = models.AutoField(primary_key=True)
     titre = models.fields.CharField(max_length=120)

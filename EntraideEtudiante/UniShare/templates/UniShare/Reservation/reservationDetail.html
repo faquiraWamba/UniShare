@@ -34,6 +34,12 @@
                         <h4>Description du service</h4>
                         <p>{{ service.description }}</p>
                     </div>
+                    <!--suppression de la reservation avec confirmation-->
+                    <form method="post" action="{% url 'annulerReservation' reservation.id_reservation %}" class="confirm-action" data-confirm="Êtes-vous sûr de vouloir annuler cette réservation ?">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Annuler la réservation</button>
+                    </form>
+                    
                 </div>
             </section>
         </div>
@@ -95,4 +101,5 @@
     </div>
 </main>
 {% endwith %}
+
 {% endblock %}

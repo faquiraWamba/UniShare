@@ -75,7 +75,7 @@
     {% block content %}
     {% endblock %}
     <script>
-        // Global confirmation handler for links/buttons with class 'confirm-action' or data-confirm attribute
+        // Global confirmation 
         document.addEventListener('click', function(e) {
             var el = e.target.closest && e.target.closest('.confirm-action, [data-confirm]');
             if (!el) return;
