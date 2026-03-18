@@ -11,25 +11,42 @@
             <div class="form-section">
                 <h3><i class="fas fa-user"></i> Informations utilisateur</h3>
                 <div class="grid-fields">
-                    {{ user_form.as_p }}
+                    <!-- formulaire de creation utilisateur étudiant -->
+                    {% if user_role == "ADM" %}
+                        {{ admin_form.as_p }}
+                    {% else %}
+                        {{ user_form.as_p }}
+                    {% endif %}
+
                 </div>
             </div>
 
-            <div id="etudiant_block" class="form-section" style="display:none;">
-                <hr>
-                <h3><i class="fas fa-graduation-cap"></i> Informations étudiant</h3>
-                <div class="grid-fields">
-                    {{ etu_form.as_p }}
+            <!-- bloc informations étudiant -->
+             {% if user_role != "ADM" %}
+                <div id="etudiant_block" class="form-section" style="display:none;">
+                    <hr>
+                    <h3><i class="fas fa-graduation-cap"></i> Informations étudiant</h3>
+                    <div class="grid-fields">
+                        {{ etu_form.as_p }}
+                    </div>
                 </div>
-            </div>
+            {% endif %}
 
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Créer mon compte</button>
+                <button type="submit" class="btn btn-primary">
+                    {% if user_role == "ADM" %}
+                        Créer le compte admin
+                    {% else %}
+                        Créer mon compte
+                    {% endif %}
+                </button>
             </div>
             
-            <div class="form-footer">
-                <p>Déjà un compte ? <a href="{% url 'connexion' %}">Connectez-vous ici</a></p>
-            </div>
+            {% if user_role != "ADM" %}
+                <div class="form-footer">
+                    <p>Déjà un compte ? <a href="{% url 'connexion' %}">Connectez-vous ici</a></p>
+                </div>
+            {% endif %}
         </form>
     </div>
 </main>

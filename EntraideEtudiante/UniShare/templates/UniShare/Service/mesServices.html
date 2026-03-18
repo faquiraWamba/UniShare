@@ -50,9 +50,10 @@
                                     <div>
                                         <a href="{% url 'serviceDetail' service.id_service %}" class="title-link">{{ service.titre }}</a>
                                             {% if service.is_expired %}
-                                                <span class="expired-label">Expiré</span>
+                                                <span class="date-expire expired">Expiré le {{ service.date_expiration|date:"d/m/Y" }}</span>
+                                            {%else %}
+                                                <span class="date-sub">Publié le {{ service.date_creation|date:"d/m/Y" }}</span>
                                             {% endif %}
-                                            <span class="date-sub">Créé le {{ service.date_creation|date:"d/m/Y" }}</span>
                                     </div>
                                 </div>
                             </td>

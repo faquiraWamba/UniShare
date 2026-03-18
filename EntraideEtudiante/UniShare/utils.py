@@ -8,6 +8,7 @@ Created on Mon Feb  9 10:21:10 2026
 from django.shortcuts import HttpResponseRedirect, render
 from django.urls import reverse
 from .models import Etudiant, Notification
+from django.db.models import Q
 
 
 def verifier_connexion(request):
@@ -41,8 +42,9 @@ def global_notifications(request):
     nb_notif = 0
     if request.session.get('user_id'):
         try:
-            etu = Etudiant.objects.get(id=request.session['user_id'])
-            nb_notif = Notification.objects.filter(reservation__demandeur=etu, lu=False).count()
+            etudiant = Etudiant.objects.get(id=request.session['user_id'])
+            notifications = Notification.objects.filter(auteur=etudiant, lu=False).order_by('-date')
+            nb_notif = notifications.count()
         except Etudiant.DoesNotExist:
             nb_notif = 0
     return {

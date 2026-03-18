@@ -16,7 +16,7 @@
 
         <nav>
             {% if request.session.user_role == "ETU" or request.session.user_role == "ANC" %}
-                <a href="{% url 'mesAnnonces' %}" class="nav-link">Mes Annonces</a> 
+                <a href="{% url 'mesAnnonces' %}" class="nav-link">Mes Annonces & Services</a> 
             {% endif %}
             {% if not request.session.user_role %}
                 <a href="/" class="nav-link">Accueil</a>
@@ -35,6 +35,7 @@
 
             <div class="auth-buttons">
                 {% if request.session.user_id %}
+                
                     <a href="{% url 'mesNotifications' %}" class="notif-wrapper">
                         <i class="fas fa-bell"></i>
                          {% if nb_notif > 0 %}

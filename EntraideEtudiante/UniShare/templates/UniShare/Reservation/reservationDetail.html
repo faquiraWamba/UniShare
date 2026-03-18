@@ -39,7 +39,13 @@
                     <!--suppression de la reservation avec confirmation-->
                     <form method="post" action="{% url 'annulerReservation' reservation.id_reservation %}" class="confirm-action" data-confirm="Êtes-vous sûr de vouloir annuler cette réservation ?">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">Annuler la réservation</button>
+                        <button type="submit" class="btn btn-danger">
+                            {% if reservation.statut != 'REF' %}
+                                Annuler la réservation
+                            {% else %}
+                                Supprimer la demande refusée
+                            {% endif %}
+                            </button>
                     </form>
                     
                 </div>

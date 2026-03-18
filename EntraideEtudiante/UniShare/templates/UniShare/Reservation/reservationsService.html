@@ -2,6 +2,12 @@
 {% load static %}
 
 {% block content %}
+<style>
+    button[disabled] {
+        cursor: not-allowed !important;
+        opacity: 0.6;
+    }
+</style>
 <main class="dashboard-page">
     <div class="page-header">
         <div class="header-titles">
@@ -49,15 +55,15 @@
                         <div class="res-card-actions">
                             <form method="POST" action="{% url 'accepterReservation' reservation.id_reservation %}" style="display: inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn-action" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
-                                    <i class="fas fa-check"></i> Accepter
-                                </button>
+                                    <button type="submit" class="btn-action" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;" {% if reservation.statut == 'ACC' %}disabled{% endif %}>
+                                        <i class="fas fa-check"></i> Accepter
+                                    </button>
                             </form>
                             <form method="POST" action="{% url 'refuserReservation' reservation.id_reservation %}" style="display: inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn-action-danger" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background-color: #dc3545; color: white;">
-                                    <i class="fas fa-times"></i> Refuser
-                                </button>
+                                    <button type="submit" class="btn-action-danger" style="padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background-color: #dc3545; color: white;" {% if reservation.statut == 'REF' %}disabled{% endif %}>
+                                        <i class="fas fa-times"></i> Refuser
+                                    </button>
                             </form>
                             {% if reservation.statut == "ATT" and reservations_en_attente > 1 %}
                             <form method="POST" action="{% url 'accepterEtRefuserAutres' reservation.id_reservation %}" style="display: inline;">

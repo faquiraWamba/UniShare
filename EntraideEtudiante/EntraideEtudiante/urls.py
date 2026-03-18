@@ -57,7 +57,7 @@ urlpatterns = [
     # Reservation de service
     path("services/reserver/<int:id>/", views.reserverService, name="reserverService"),
     path("services/mes-reservations/", views.mesReservations, name="mesReservations"),
-    path("services/annuler-reservation/<int:id>/", views.annulerReservation, name="annulerReservation"),
+    path("services/annuler-reservation/<int:id_reservation>/", views.annulerReservation, name="annulerReservation"),
     path("services/detail-reservation/<int:id>/", views.detailReservation, name="detailReservation"),
     path("services/reservationsService/<int:id>/", views.reservationsService, name="reservationsService"),
     path("services/accepter-reservation/<int:id_reservation>/", views.accepterReservation, name="accepterReservation"),
@@ -68,7 +68,8 @@ urlpatterns = [
     path("notifications/", views.mesNotifications, name="mesNotifications"),
     path("notifications/mark-as-read/<int:id>/", views.marquerNotificationCommeLue, name="marquerNotificationCommeLue"),
     path("notifications/mark-all-as-read/", views.marquerToutesNotificationsCommeLues, name="marquerToutesNotificationsCommeLues"),
-    #path("notifications/services/<int:id>/", views.notificationsService, name="notificationsService"),
+    path("notifications/supprimer/<int:id>/", views.supprimerNotification, name="supprimerNotification"),
+    path("notifications/supprimer-toutes/", views.supprimerToutesNotifications, name="supprimerToutesNotifications"),
 
     # Admin
     path("Theadmin/utilisateurs/", views.listeUtilisateurs, name="listeUtilisateurs"),

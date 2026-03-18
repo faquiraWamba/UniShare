@@ -3,18 +3,24 @@
 
 {% block content %}
 <main class="notifications-page">
-    <div class="page-header">
-        <div class="header-titles">
+    <header class="page-header">
+        <div class="header-main">
             <h1><i class="fas fa-bell"></i> Centre de Notifications</h1>
             <p class="subtitle">Restez informé de l'activité sur vos services et annonces</p>
         </div>
-        {% if lesnotifications %}
-        <form action="{% url 'marquerToutesNotificationsCommeLues' %}" method="post">
-            {% csrf_token %}
-            <button type="submit" class="btn-text-action">Tout marquer comme lu</button>
-        </form>
-        {% endif %}
-    </div>
+        
+        <div class="header-actions">
+            {% if lesnotifications %}
+                <form action="{% url 'marquerToutesNotificationsCommeLues' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-secondary-sm">Tout marquer comme lu</button>
+                </form>
+                <a href="{% url 'supprimerToutesNotifications' %}" class="btn-danger-text" onclick="return confirm('Supprimer toutes les notifications ?')">
+                    <i class="fas fa-trash-alt"></i> Tout supprimer
+                </a>
+            {% endif %}
+        </div>
+    </header>
 
     <div class="notifications-split-container">
         {% if lesnotifications %}
@@ -29,25 +35,20 @@
                              data-date="{{ notification.date|date:'d M Y à H:i' }}">
                             
                             <div class="notif-icon">
-                                {% if "acceptée" in notification.message|lower %}
-                                    <i class="fas fa-check-circle color-success"></i>
-                                {% elif "réservation" in notification.message|lower %}
-                                    <i class="fas fa-calendar-plus color-info"></i>
+                                {% if notification.lu %}
+                                    <div class="icon-circle bg-light"><i class="fas fa-envelope-open text-muted"></i></div>
                                 {% else %}
-                                    <i class="fas fa-info-circle color-gray"></i>
+                                    <div class="icon-circle bg-primary-light"><i class="fas fa-envelope text-primary"></i></div>
                                 {% endif %}
                             </div>
 
                             <div class="notif-content">
                                 <div class="notif-header">
-                                    <h3>{{ notification.titre }}</h3>
+                                    <h3 class="notif-title">{{ notification.titre }}</h3>
                                     <span class="notif-time">{{ notification.date|date:"H:i" }}</span>
                                 </div>
-                                <p class="notif-excerpt">{{ notification.message|truncatechars:45 }}</p>
+                                <p class="notif-excerpt">{{ notification.message|truncatechars:50 }}</p>
                             </div>
-                            {% if not notification.lu %}
-                                <div class="unread-dot"></div>
-                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
@@ -55,27 +56,38 @@
 
             <section class="notif-detail-pane" id="notifDetailPane">
                 <div class="empty-detail" id="emptyDetail">
-                    <i class="fas fa-envelope-open"></i>
-                    <p>Sélectionnez une notification pour lire son contenu</p>
+                    <div class="illustration">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <p>Sélectionnez un message pour l'afficher ici</p>
                 </div>
+
                 <div class="detail-content" id="detailContent" style="display: none;">
                     <div class="detail-header">
+                        <div class="detail-meta">
+                            <span id="detailDate" class="detail-date"></span>
+                        </div>
                         <h2 id="detailTitle"></h2>
-                        <span id="detailDate" class="detail-date"></span>
                     </div>
                     <div class="detail-body">
                         <p id="detailMessage"></p>
                     </div>
                     <div class="detail-footer">
-                        <button class="btn-close-detail" onclick="resetSelection()">Fermer</button>
+                        <button class="btn-close" onclick="resetSelection()"><i class="fas fa-times"></i> Fermer</button>
+                        <a href="#" id="deleteNotificationLink" class="btn-danger-outline" onclick="return confirm('Supprimer cette notification ?')">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </a>
                     </div>
                 </div>
             </section>
         {% else %}
-            <div class="empty-state">
-                <i class="fas fa-bell-slash"></i>
-                <p>Vous n'avez aucune notification pour le moment.</p>
-                <a href="{% url 'accueil' %}" class="btn btn-primary-outline">Retour à l'accueil</a>
+            <div class="full-empty-state">
+                <div class="empty-icon-container">
+                    <i class="fas fa-bell-slash"></i>
+                </div>
+                <h2>C'est bien calme ici...</h2>
+                <p>Vous n'avez aucune nouvelle notification.</p>
+                <a href="{% url 'accueil' %}" class="btn-primary">Retour à l'accueil</a>
             </div>
         {% endif %}
     </div>
@@ -83,36 +95,36 @@
 
 <script>
 function selectNotification(element) {
-    // 1. Gérer l'apparence de sélection
     document.querySelectorAll('.notif-item').forEach(item => item.classList.remove('active'));
     element.classList.add('active');
 
-    // 2. Récupérer les données
     const titre = element.getAttribute('data-titre');
     const message = element.getAttribute('data-message');
     const date = element.getAttribute('data-date');
     const id = element.getAttribute('data-id');
 
-    // 3. Afficher dans le panneau de droite
     document.getElementById('emptyDetail').style.display = 'none';
-    document.getElementById('detailContent').style.display = 'block';
+    const detailContent = document.getElementById('detailContent');
+    detailContent.style.display = 'flex';
     
     document.getElementById('detailTitle').innerText = titre;
     document.getElementById('detailMessage').innerText = message;
     document.getElementById('detailDate').innerText = date;
 
-    // 4. Marquer comme lu visuellement
+    // Mise à jour dynamique du lien de suppression
+    const deleteLink = document.getElementById('deleteNotificationLink');
+    deleteLink.href = `/notifications/supprimer/${id}/`; 
+
     if (element.classList.contains('unread')) {
         element.classList.remove('unread');
-        const dot = element.querySelector('.unread-dot');
-        if (dot) dot.remove();
-        
-        // 5. Appeler le serveur pour marquer comme lu en BD
-        fetch(`/notifications/marquer-lue/${id}/`, {
+        // On change l'icône visuellement
+        const iconI = element.querySelector('.notif-icon i');
+        iconI.className = "fas fa-envelope-open text-muted";
+        element.querySelector('.icon-circle').className = "icon-circle bg-light";
+
+        fetch(`/notifications/mark-as-read/${id}/`, {
             method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-            }
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
         });
     }
 }
@@ -124,109 +136,154 @@ function resetSelection() {
 }
 </script>
 <style>
+:root {
+    --primary: #4f46e5;
+    --primary-light: #eef2ff;
+    --danger: #ef4444;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --bg-card: #ffffff;
+}
+
 .notifications-page {
-    padding: 1rem 2rem;
-    height: calc(100vh - 80px); /* Hauteur fixe sous la navbar */
+    padding: 2rem;
+    height: calc(100vh - 70px);
+    background-color: #f9fafb;
+}
+
+.page-header {
     display: flex;
-    flex-direction: column;
-}
-
-.notifications-split-container {
-    display: grid;
-    grid-template-columns: 380px 1fr; /* Largeur fixe à gauche, flexible à droite */
-    gap: 1.5rem;
-    flex: 1;
-    overflow: hidden; /* Empêche le scroll de la page entière */
-}
-
-/* Sidebar de la liste */
-.notif-sidebar {
-    background: white;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    overflow-y: auto; /* Scroll uniquement dans la liste */
-}
-
-.notif-item {
-    padding: 1rem;
-    border-bottom: 1px solid #f1f5f9;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-    display: flex;
-    gap: 12px;
-}
-
-.notif-item:hover { background: #f8fafc; }
-.notif-item.active { background: #eef2ff; border-left: 4px solid #4f46e5; }
-
-.notif-excerpt {
-    font-size: 0.85rem;
-    color: #64748b;
-    margin-top: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Panneau de détail */
-.notif-detail-pane {
-    background: white;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.empty-detail {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #94a3b8;
-}
-
-.empty-detail i { font-size: 3rem; margin-bottom: 1rem; }
-
-.detail-content {
-    padding: 2.5rem;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-
-.detail-header {
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 1.5rem;
+    justify-content: space-between;
+    align-items: flex-end;
     margin-bottom: 1.5rem;
 }
 
-.detail-header h2 { font-size: 1.8rem; color: #1e293b; margin: 0; }
-.detail-date { font-size: 0.85rem; color: #94a3b8; }
+.header-main h1 { font-size: 1.5rem; color: var(--text-main); margin-bottom: 0.25rem; }
+.subtitle { color: var(--text-muted); font-size: 0.95rem; }
+
+.header-actions { display: flex; align-items: center; gap: 1.5rem; }
+
+/* Liste vs Détail */
+.notifications-split-container {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 1.5rem;
+    height: 80%;
+}
+
+.notif-sidebar {
+    background: var(--bg-card);
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow-y: auto;
+}
+
+.notif-item {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    gap: 1rem;
+}
+
+.notif-item:hover { background: #f3f4f6; }
+.notif-item.active { 
+    background: var(--primary-light); 
+    border-left: 4px solid var(--primary);
+    padding-left: calc(1.25rem - 4px);
+}
+
+/* Icônes circulaires */
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.bg-primary-light { background: var(--primary-light); }
+.bg-light { background: #f3f4f6; }
+.text-primary { color: var(--primary); }
+
+.notif-title { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin: 0; }
+.notif-time { font-size: 0.75rem; color: var(--text-muted); }
+
+/* Panneau de détail */
+.notif-detail-pane {
+    background: var(--bg-card);
+    border-radius: 1rem;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.detail-header {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.detail-date { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+.detail-header h2 { margin-top: 0.5rem; font-size: 1.5rem; color: var(--text-main); }
 
 .detail-body {
-    flex: 1;
+    padding: 2rem;
+    flex-grow: 1;
     font-size: 1.1rem;
     line-height: 1.6;
-    color: #475569;
+    color: #374151;
 }
 
-/* Couleurs et Badges */
-.unread { background: #f0f7ff; }
-.unread-dot {
-    width: 8px;
-    height: 8px;
-    background: #4f46e5;
-    border-radius: 50%;
-    position: absolute;
-    right: 15px;
-    top: 50%;
-    transform: translateY(-50%);
+.detail-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
 }
 
-.color-success { color: #10b981; }
-.color-info { color: #3b82f6; }
+/* Boutons */
+.btn-secondary-sm {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 0.85rem;
+}
+
+.btn-danger-text { color: var(--danger); font-size: 0.85rem; font-weight: 600; text-decoration: none; }
+.btn-danger-outline {
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* État vide */
+.full-empty-state {
+    grid-column: span 2;
+    text-align: center;
+    padding: 5rem;
+}
+.empty-icon-container {
+    font-size: 4rem;
+    color: #d1d5db;
+    margin-bottom: 1.5rem;
+}
 </style>
 {% endblock %}

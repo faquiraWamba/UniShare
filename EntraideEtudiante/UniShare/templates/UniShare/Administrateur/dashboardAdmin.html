@@ -26,19 +26,20 @@
                     <span class="stat-value">{{ nb_etudiants }}</span>
                 </div>
                 <div class="stat-item">
+                    <span class="stat-label">Anciens parmi étudiants:</span>
+                    <span class="stat-value">{{ nb_anciens }}</span>
+                </div>
+                <div class="stat-item">
                     <span class="stat-label">Admins :</span>
                     <span class="stat-value">{{ nb_admins }}</span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-label">Anciens :</span>
-                    <span class="stat-value">{{ nb_anciens }}</span>
-                </div>
+                
                 <div class="stat-item highlight">
-                    <span class="stat-label">Comptes actifs :</span>
+                    <span class="stat-label">Comptes non admin actifs :</span>
                     <span class="stat-value">{{ nb_comptes_actifs }}</span>
                 </div>
                 <div class="stat-item warning">
-                    <span class="stat-label">Comptes suspendus :</span>
+                    <span class="stat-label">Comptes non admin suspendus :</span>
                     <span class="stat-value">{{ nb_comptes_suspendus }}</span>
                 </div>
                 {% if nb_comptes_suppression_pending > 0 %}

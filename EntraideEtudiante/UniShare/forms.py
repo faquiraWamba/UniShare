@@ -27,7 +27,23 @@ class UtilisateurForm(forms.ModelForm):
         self.fields['role'].choices = [
             (key, label) for key, label in self.fields['role'].choices if key != 'ADM'
         ]
+# Création compte utilisateur ADMIN
+class AdminForm(forms.ModelForm):
+    mot_de_passe = forms.CharField(
+        widget=forms.PasswordInput
+    )
 
+    class Meta:
+        model = Utilisateur
+        fields = ['nom', 'prenom', 'email', 'mot_de_passe', 'role', 'photo']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Inclure uniquement le rôle 'ADM'
+        self.fields['role'].choices = [
+            (key, label) for key, label in self.fields['role'].choices if key == 'ADM'
+        ]
+        
 
 
 # Création profil étudiant

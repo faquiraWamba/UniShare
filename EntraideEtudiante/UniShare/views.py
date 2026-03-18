@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.shortcuts import render, HttpResponseRedirect
 from .utils import verifier_connexion, verifier_etudiant, verifier_proprietaire, verifier_admin
 from django.utils import timezone
-from .forms import ConnexionForm, UtilisateurForm, RechercheUtilisateurForm,EtudiantForm,AnnonceForm ,ServiceForm,NotificationForm
+from .forms import ConnexionForm, UtilisateurForm, RechercheUtilisateurForm,EtudiantForm,AnnonceForm ,ServiceForm,NotificationForm,AdminForm
 from .models import Utilisateur,Etudiant,Annonce,Service, Reservation, Notification
 from django.db.models import Q
 
@@ -29,36 +29,48 @@ def creerCompte(request):
     if request.method == 'POST':
         user_form = UtilisateurForm(request.POST, request.FILES)
         etu_form = EtudiantForm(request.POST)
+        admin_form = AdminForm(request.POST, request.FILES)
 
-        if user_form.is_valid():
-            utilisateur = user_form.save(commit=False)
-            
-            # Si l'utilisateur est étudiant, on ajoute les infos étudiant
-            if utilisateur.role == "ETU":
-                if etu_form.is_valid():
-                    Etudiant.objects.create(
-                        id=utilisateur.id,
-                        nom=utilisateur.nom,
-                        prenom=utilisateur.prenom,
-                        email=utilisateur.email,
-                        mot_de_passe=utilisateur.mot_de_passe,
-                        role=utilisateur.role,
-                        photo=utilisateur.photo,
-                        ecole=etu_form.cleaned_data['ecole'],
-                        niveau=etu_form.cleaned_data['niveau'],
-                        formation=etu_form.cleaned_data['formation'],
-                        promo=etu_form.cleaned_data['promo'],
-                    )
+        if request.session.get('user_role') == "ADM":
+            if admin_form.is_valid():
+                utilisateur = admin_form.save(commit=False)
+                utilisateur.save()
+                return HttpResponseRedirect(reverse("listeUtilisateurs"))
+        else:
+            if user_form.is_valid():
+                utilisateur = user_form.save(commit=False)
+                
+                # Si l'utilisateur est étudiant, on ajoute les infos étudiant
+                if utilisateur.role == "ETU":
+                    if etu_form.is_valid():
+                        Etudiant.objects.create(
+                            id=utilisateur.id,
+                            nom=utilisateur.nom,
+                            prenom=utilisateur.prenom,
+                            email=utilisateur.email,
+                            mot_de_passe=utilisateur.mot_de_passe,
+                            role=utilisateur.role,
+                            photo=utilisateur.photo,
+                            ecole=etu_form.cleaned_data['ecole'],
+                            niveau=etu_form.cleaned_data['niveau'],
+                            formation=etu_form.cleaned_data['formation'],
+                            promo=etu_form.cleaned_data['promo'],
+                        )
 
-            return HttpResponseRedirect(reverse("connexion"))
+                return HttpResponseRedirect(reverse("connexion"))
 
     else:
         user_form = UtilisateurForm()
         etu_form = EtudiantForm()
+        admin_form = AdminForm()
 
+    user_role = request.session.get('user_role', None)
+    print("DEBUG: user_role in creerCompte", user_role)
     return render(request, 'UniShare/Authentification/creation_compte.html', {
         'user_form': user_form,
-        'etu_form': etu_form
+        'etu_form': etu_form,
+        'admin_form': admin_form,
+        'user_role': user_role
     })
 
 def connexion(request):
@@ -355,16 +367,16 @@ def mesAnnonces(request):
     # seuls étudiants publient des annonces).
     auteur = Etudiant.objects.get(id=user_id)
 
-    # Exclure les services (qui héritent de Annonce) et ne pas afficher les annonces expirées
+    # Exclure les services (qui héritent de Annonce) 
     
     annonces = Annonce.objects.filter(auteur=auteur, service__isnull=True)
-    annonces = annonces.filter(Q(date_expiration__isnull=True) | Q(date_expiration__gte=timezone.now()))
-    # Récupérer aussi les services de l'utilisateur pour afficher le compteur
     services = Service.objects.filter(auteur=auteur)
+    notifications = Notification.objects.filter(auteur=auteur).order_by('-date')
 
     return render(request, "UniShare/Annonce/mesAnnonces.html", {
         "lesannonces": annonces,
-        "lesservices": services
+        "lesservices": services,
+        "notifications": notifications
     })
 
 def modifierAnnonce(request, id):
@@ -452,24 +464,27 @@ def notificationSuppression(request, id):
         titre = request.POST.get('titre', f"{objet_type.capitalize()} supprimée")
         message = request.POST.get('message', f"Votre {objet_type} a été supprimée.")
         
+        # Debug print
+        print("DEBUG: Création notification suppression", titre, message, objet_type, objet)
         # Créer une notification
         notification = Notification.objects.create(
             titre=titre,
             message=message,
             type_notification=type_notification,
-            annonce=objet
+            auteur=objet.auteur
         )
-        
+        print("DEBUG: Notification créée", notification)
         # Si c'est un Service, supprimer les réservations et notifier les demandeurs
         if objet_type == 'service':
+            print("DEBUG: Suppression des réservations liées au service", objet)
             reservations = Reservation.objects.filter(service=objet)
             for reservation in reservations:
                 # Créer une notification pour chaque demandeur
                 notif = Notification.objects.create(
                     titre=titre,
-                    message=message,
-                    type_notification=type_notification,
-                    reservation=reservation
+                    message="Le service que vous avez réservé a été supprimé.",
+                    type_notification="RESERVATION",
+                    auteur=reservation.demandeur
                 )
                 reservation.delete()
         
@@ -582,6 +597,10 @@ def listeServices(request):
         services = services.order_by('-date_rencontre')
     elif sort_by == 'date_rencontre':
         services = services.order_by('date_rencontre')
+    elif sort_by == '-date_expiration':
+        services = services.order_by('-date_expiration')
+    elif sort_by == 'date_expiration':
+        services = services.order_by('date_expiration')
 
     # Préparer les choix pour les selects
     types_choices = Service.TypeService.choices
@@ -799,13 +818,14 @@ def annulerReservation(request, id_reservation):
     if reservation.demandeur != etudiant:
         return HttpResponseRedirect(reverse("mesReservations"))
     if request.method == "POST":
+        if reservation.statut == "ACC":
+            notification = Notification.objects.create(
+                titre=f"Réservation annulée : {reservation.service.titre}",
+                message=f"{etudiant.prenom} {etudiant.nom} a annulé sa réservation pour le service '{reservation.service.titre}'.",
+                type_notification=Notification.TypeNotification.RESERVATION_AUTEUR,
+                auteur=service.auteur
+            )
         reservation.delete()
-        notification = Notification.objects.create(
-            titre=f"Réservation annulée : {reservation.service.titre}",
-            reservation=reservation,
-            message=f"{etudiant.prenom} {etudiant.nom} a annulé sa réservation pour le service '{reservation.service.titre}'.",
-            type_notification=Notification.TypeNotification.RESERVATION_AUTEUR
-        )
         return HttpResponseRedirect(reverse("mesReservations"))
     return render(request, "UniShare/Reservation/annulerReservation.html", {"reservation": reservation})
 
@@ -862,9 +882,9 @@ def accepterReservation(request, id_reservation):
 
     notification = Notification.objects.create(
         titre=f"Réservation acceptée : {service.titre}",
-        reservation=reservation,
         message=f"Votre réservation pour le service '{service.titre}' a été acceptée.",
-        type_notification=Notification.TypeNotification.RESERVATION
+        type_notification=Notification.TypeNotification.RESERVATION,
+        auteur=reservation.demandeur
     )
 
     return HttpResponseRedirect(reverse("reservationsService", args=[service.id_service]))
@@ -886,9 +906,9 @@ def refuserReservation(request, id_reservation):
 
     notification = Notification.objects.create(
         titre=f"Réservation refusée : {service.titre}",
-        reservation=reservation,    
         message=f"Votre réservation pour le service '{service.titre}' a été refusée.",
-        type_notification=Notification.TypeNotification.RESERVATION
+        type_notification=Notification.TypeNotification.RESERVATION,
+        auteur=reservation.demandeur
     )
 
     return HttpResponseRedirect(reverse("reservationsService", args=[service.id_service]))
@@ -911,9 +931,9 @@ def accepterEtRefuserAutres(request, id_reservation):
 
     notification = Notification.objects.create(
         titre=f"Réservation acceptée : {service.titre}",
-        reservation=reservation,
         message=f"Votre réservation pour le service '{service.titre}' a été acceptée.",
-        type_notification=Notification.TypeNotification.RESERVATION
+        type_notification=Notification.TypeNotification.RESERVATION,
+        auteur=reservation.demandeur
     )
 
     # Refuser toutes les autres réservations du même service
@@ -924,9 +944,9 @@ def accepterEtRefuserAutres(request, id_reservation):
         
         Notification.objects.create(
             titre=f"Réservation refusée : {service.titre}",
-            reservation=autre_res,
             message=f"Votre réservation pour le service '{service.titre}' a été refusée.",
-            type_notification=Notification.TypeNotification.RESERVATION
+            type_notification=Notification.TypeNotification.RESERVATION,
+            auteur=autre_res.demandeur
         )
 
     return HttpResponseRedirect(reverse("reservationsService", args=[service.id_service]))
@@ -1212,9 +1232,39 @@ def gererAnnoncesExpirees(request):
         if action == 'supprimer':
             # Supprimer les annonces sélectionnées
             if annonces_ids:
+                # Envoyer une notification aux auteurs des annonces sélectionnées avant de les supprimer
+                for annonce_id in annonces_ids:
+                    annonce = Annonce.objects.get(id_annonce=annonce_id)
+                    # Envoyer une notification à l'auteur de l'annonce
+                    Notification.objects.create(
+                        type_notification=Notification.TypeNotification.ANNONCE,
+                        titre=f"Annonce expirée et/ou supprimée : {annonce.titre}",
+                        message=f"Votre annonce '{annonce.titre}' a expiré et/ou a été supprimée par l'administrateur.",
+                        auteur=annonce.auteur
+                    )
                 Annonce.objects.filter(id_annonce__in=annonces_ids, service__isnull=True).delete()
             # Supprimer les services sélectionnés
             if services_ids:
+                #Notifier les utilisateurs qui ont réservé ces services et les auteurs que les services ont été supprimés
+                for service_id in services_ids:
+                    service = Service.objects.get(id_service=service_id)
+                    reservations = Reservation.objects.filter(service=service, statut__in=["ACC", "ATT"]) 
+                    for reservation in reservations:
+                        # Envoyer une notification à l'utilisateur concerné
+                        Notification.objects.create(
+                            type_notification=Notification.TypeNotification.RESERVATION,
+                            titre=f"Service expiré et/ou supprimé : {service.titre}",
+                            message=f"Le service '{service.titre}' publié par {service.auteur.prenom} {service.auteur.nom}, que vous avez réservé, a expiré et a été supprimé par l'administrateur.",
+                            auteur=reservation.demandeur
+                        )
+                    # Envoyer une notification à l'auteur du service
+                    Notification.objects.create(
+                        type_notification=Notification.TypeNotification.ANNONCE,
+                        titre=f"Service expiré et/ou supprimé : {service.titre}",
+                        message=f"Le service '{service.titre}' que vous avez publié, a expiré et a été supprimé par l'administrateur.",
+                        auteur=service.auteur
+                    )
+
                 Service.objects.filter(id_service__in=services_ids).delete()
 
         return HttpResponseRedirect(reverse("gererAnnoncesExpirees"))
@@ -1267,10 +1317,7 @@ def mesNotifications(request):
     user_id = request.session['user_id']
     etudiant = Etudiant.objects.get(id=user_id)
 
-    if etudiant.role == "ETU":
-        notifications = Notification.objects.filter(Q(reservation__demandeur=etudiant) | Q(annonce__auteur=etudiant)).order_by('-date')
-    elif etudiant.role == "ANC":
-        notifications = Notification.objects.filter(annonce__auteur=etudiant).order_by('-date')
+    notifications = Notification.objects.filter(auteur=etudiant).order_by('-date')
         
     return render(request, "UniShare/Notification/mesNotifications.html", {
         "lesnotifications": notifications
@@ -1280,6 +1327,8 @@ def mesNotifications(request):
 """ Créer une notification (lors de la suppression d'une annonce par admin)"""
 def creerNotification(request,titre,message, type_notification,annonce):
     if 'user_id' not in request.session:
+        return HttpResponseRedirect(reverse("connexion"))
+    if request.session.get('user_role') != "ADM":
         return HttpResponseRedirect(reverse("connexion"))
 
     if request.method == 'POST':
@@ -1305,7 +1354,9 @@ def marquerNotificationCommeLue(request, id):
         return HttpResponseRedirect(reverse("connexion"))
 
     notification = Notification.objects.get(id=id)
-    notification.lue = True
+    if notification.auteur.id != request.session['user_id']:
+        return HttpResponseRedirect(reverse("mesNotifications"))
+    notification.lu = True
     notification.save()
 
     return HttpResponseRedirect(reverse("mesNotifications"))
@@ -1317,11 +1368,38 @@ def marquerToutesNotificationsCommeLues(request):
 
     user_id = request.session['user_id']
     etudiant = Etudiant.objects.get(id=user_id)
-    if etudiant.role == "ETU":
-        notifications = Notification.objects.filter((Q(reservation__demandeur=etudiant) | Q(annonce__auteur=etudiant)) & Q(lu=False)).order_by('-date')    
-    elif etudiant.role == "ANC":
-        notifications = Notification.objects.filter(annonce__auteur=etudiant, lu=False).order_by('-date')
-      
+    notifications = Notification.objects.filter(auteur=etudiant, lu=False).order_by('-date')
+
+    if not notifications.exists():
+        return HttpResponseRedirect(reverse("mesNotifications"))
     notifications.update(lu=True)
+
+    return HttpResponseRedirect(reverse("mesNotifications"))
+
+""" Supprimer une notification"""
+def supprimerNotification(request, id):
+    if 'user_id' not in request.session:
+        return HttpResponseRedirect(reverse("connexion"))
+
+    notification = Notification.objects.get(id_notif=id)
+
+    if notification.auteur.id != request.session['user_id']:
+        return HttpResponseRedirect(reverse("mesNotifications"))
+    notification.delete()
+
+    return HttpResponseRedirect(reverse("mesNotifications"))
+
+""" Supprimer toutes les notifications"""
+def supprimerToutesNotifications(request):
+    if 'user_id' not in request.session:
+        return HttpResponseRedirect(reverse("connexion"))
+
+    user_id = request.session['user_id']
+    etudiant = Etudiant.objects.get(id=user_id)
+    notifications = Notification.objects.filter(auteur=etudiant)
+
+    if not notifications.exists() :
+        return HttpResponseRedirect(reverse("mesNotifications"))
+    notifications.delete()
 
     return HttpResponseRedirect(reverse("mesNotifications"))
